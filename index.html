@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IEM'21 KUET - Industrial Study Hub</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Font (Inter/Roboto for Industrial feel) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+        
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-slow { animation: pulse-slow 4s infinite; }
+
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+        .animate-shimmer { animation: shimmer 2s infinite; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body class="bg-[#0f172a] text-slate-200 selection:bg-cyan-500/30 selection:text-cyan-100 min-h-screen overflow-x-hidden relative">
+
+    <!-- Background Effects -->
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-600/20 rounded-full blur-[120px] animate-pulse-slow"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-600/20 rounded-full blur-[120px] animate-pulse-slow" style="animation-delay: 2s;"></div>
+        <div class="absolute top-[40%] left-[40%] w-[30%] h-[30%] bg-blue-600/20 rounded-full blur-[100px] animate-pulse-slow" style="animation-delay: 4s;"></div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="root" class="relative z-10"></div>
+
+    <!-- Modals Container -->
+    <div id="modal-root" class="relative z-50"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+        // --- Configuration ---
+        // Provided by environment or manually set
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const apiKey = ""; // Gemini API Key (Runtime provided)
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- State Management ---
+        const state = {
+            user: null,
+            isAdmin: false,
+            view: 'home', // 'home', 'login', 'admin'
+            materials: [],
+            loading: true,
+            filterYear: 'All',
+            filterSem: 'All',
+            searchSub: '',
+            neuralTarget: null, // Subject for AI analysis
+            
+            // Admin Form State
+            adminForm: {
+                id: null, // For editing
+                year: '1st Year',
+                semester: '1st Semester',
+                subject: '',
+                teacher: '',
+                category: 'Study Material',
+                part: 'Part A',
+                link: '',
+                storageType: 'link', // 'link' or 'file'
+                fileData: null,
+                fileName: '',
+                status: 'IDLE' // 'IDLE', 'UPLOADING', 'SUCCESS', 'ERROR'
+            },
+
+            // Neural Modal State
+            neural: {
+                activeTab: 'concepts',
+                content: '',
+                loading: false,
+                data: { concepts: '', quiz: '', strategy: '' }
+            }
+        };
+
+        // --- Constants ---
+        const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+        const SEMESTERS = ['1st Semester', '2nd Semester'];
+        const CATEGORIES = ['Study Material', 'Term Questions', 'CT Questions', 'Lab Manual'];
+        const PARTS = ['Part A', 'Part B', 'Complete'];
+
+        // --- Core Logic ---
+
+        // Auth Listener
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+        
+        onAuthStateChanged(auth, (currentUser) => {
+            state.user = currentUser;
+            if (currentUser) {
+                setupDataListener();
+            }
+            render();
+        });
+
+        initAuth();
+
+        // Data Listener
+        let unsubscribeData = null;
+        function setupDataListener() {
+            if (unsubscribeData) unsubscribeData();
+            
+            const materialsRef = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
+            unsubscribeData = onSnapshot(materialsRef, (snapshot) => {
+                const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                // Sort by createdAt descending
+                docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                state.materials = docs;
+                state.loading = false;
+                render();
+            }, (err) => {
+                console.error("Fetch Error:", err);
+                state.loading = false;
+                render();
+            });
+        }
+
+        // --- Actions ---
+
+        window.setView = (viewName) => {
+            state.view = viewName;
+            render();
+        };
+
+        window.handleLogin = (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const username = form.username.value;
+            const password = form.password.value;
+
+            if (username === 'admin' && password === 'IemKUET2k01') {
+                state.isAdmin = true;
+                state.view = 'admin';
+            } else {
+                alert('ACCESS DENIED: Invalid Credentials');
+            }
+            render();
+        };
+
+        window.handleLogout = () => {
+            state.isAdmin = false;
+            state.view = 'home';
+            render();
+        };
+
+        window.setFilter = (key, value) => {
+            state[key] = value;
+            render();
+        };
+
+        // Admin Form Actions
+        window.updateAdminForm = (key, value) => {
+            state.adminForm[key] = value;
+            render();
+        };
+
+        window.handleFileSelect = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.size > 800 * 1024) { // 800KB Limit
+                alert("File too large! Max 800KB for direct storage. Use Link for larger files.");
+                e.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                state.adminForm.fileData = reader.result;
+                state.adminForm.fileName = file.name;
+                render();
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.handleEdit = (id) => {
+            const item = state.materials.find(m => m.id === id);
+            if (!item) return;
+            state.adminForm = {
+                id: item.id,
+                year: item.year,
+                semester: item.semester,
+                subject: item.subject,
+                teacher: item.teacher,
+                category: item.category,
+                part: item.part,
+                link: item.link || '',
+                storageType: item.fileData ? 'file' : 'link',
+                fileData: item.fileData || null,
+                fileName: item.fileName || '',
+                status: 'IDLE'
+            };
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            render();
+        };
+
+        window.cancelEdit = () => {
+            resetAdminForm();
+            render();
+        };
+
+        function resetAdminForm() {
+            state.adminForm = {
+                id: null,
+                year: YEARS[0],
+                semester: SEMESTERS[0],
+                subject: '',
+                teacher: '',
+                category: 'Study Material',
+                part: 'Part A',
+                link: '',
+                storageType: 'link',
+                fileData: null,
+                fileName: '',
+                status: 'IDLE'
+            };
+        }
+
+        window.handleAdminSubmit = async (e) => {
+            e.preventDefault();
+            if (!state.user) return;
+
+            const form = state.adminForm;
+            
+            if (form.storageType === 'link' && !form.link) return alert("Please enter a URL");
+            if (form.storageType === 'file' && !form.fileData) return alert("Please upload a file");
+
+            state.adminForm.status = form.id ? 'UPDATING' : 'UPLOADING';
+            render();
+
+            try {
+                const payload = {
+                    year: form.year,
+                    semester: form.semester,
+                    subject: form.subject,
+                    teacher: form.teacher,
+                    category: form.category,
+                    part: form.part,
+                    link: form.storageType === 'link' ? form.link : null,
+                    fileData: form.storageType === 'file' ? form.fileData : null,
+                    fileName: form.storageType === 'file' ? form.fileName : null,
+                    updatedBy: state.user.uid
+                };
+
+                if (form.id) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'materials', form.id), {
+                        ...payload,
+                        updatedAt: serverTimestamp()
+                    });
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'materials'), {
+                        ...payload,
+                        createdAt: serverTimestamp(),
+                        uploadedBy: state.user.uid
+                    });
+                }
+
+                state.adminForm.status = 'SUCCESS';
+                render();
+                
+                setTimeout(() => {
+                    resetAdminForm();
+                    render();
+                }, 2000);
+
+            } catch (err) {
+                console.error(err);
+                state.adminForm.status = 'ERROR';
+                render();
+            }
+        };
+
+        window.handleDelete = async (id) => {
+            if (!state.isAdmin) return;
+            if (confirm("WARNING: Permanently delete this material?")) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'materials', id));
+                } catch (err) {
+                    alert("Delete failed: " + err.message);
+                }
+            }
+        };
+
+        window.handleDownload = (fileData, fileName) => {
+            const link = document.createElement('a');
+            link.href = fileData;
+            link.download = fileName || 'download';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        // --- Gemini Integration ---
+        window.openNeural = (subject) => {
+            state.neuralTarget = subject;
+            state.neural = {
+                activeTab: 'concepts',
+                content: '',
+                loading: false,
+                data: { concepts: '', quiz: '', strategy: '' }
+            };
+            render();
+            generateNeuralContent('concepts');
+        };
+
+        window.closeNeural = () => {
+            state.neuralTarget = null;
+            render();
+        };
+
+        window.switchNeuralTab = (tab) => {
+            state.neural.activeTab = tab;
+            if (state.neural.data[tab]) {
+                state.neural.content = state.neural.data[tab];
+                render();
+            } else {
+                generateNeuralContent(tab);
+            }
+        };
+
+        async function generateNeuralContent(type) {
+            state.neural.loading = true;
+            render();
+
+            const subject = state.neuralTarget;
+            let prompt = "";
+            if (type === 'concepts') prompt = `For the engineering subject '${subject}', list 3 core concepts critical for students. Concise bullet points.`;
+            else if (type === 'quiz') prompt = `Create a short 3-question MCQ quiz for '${subject}'. Mark correct answer with (Correct).`;
+            else if (type === 'strategy') prompt = `Provide a 3-step study strategy to ace '${subject}'.`;
+
+            try {
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    }
+                );
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Neural connection failed.";
+                
+                state.neural.data[type] = text;
+                state.neural.content = text;
+            } catch (err) {
+                state.neural.content = "Error connecting to Neural Engine.";
+            }
+
+            state.neural.loading = false;
+            render();
+        }
+
+        // --- Rendering ---
+
+        function render() {
+            const root = document.getElementById('root');
+            const modalRoot = document.getElementById('modal-root');
+            
+            // Navbar - Responsive Stacking
+            const nav = `
+                <nav class="relative z-20 mx-4 mt-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg shadow-black/20">
+                    <div class="max-w-7xl mx-auto px-6">
+                        <div class="flex flex-col md:flex-row items-center justify-between min-h-[5rem] py-4 md:py-0 gap-4">
+                            <div class="flex items-center gap-3 cursor-pointer group" onclick="setView('home')">
+                                <div class="p-2 bg-gradient-to-tr from-cyan-500 to-purple-500 rounded-xl shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-all duration-500">
+                                    <i data-lucide="cpu" class="w-6 h-6 text-white"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
+                                        IEM'21
+                                    </span>
+                                    <span class="text-[10px] font-bold tracking-[0.2em] text-cyan-400/80">KUET</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-4 w-full md:w-auto justify-center md:justify-end">
+                                <div class="hidden md:flex items-center gap-2 text-xs font-medium text-slate-400 bg-black/20 px-4 py-2 rounded-full border border-white/5">
+                                    <div class="w-2 h-2 rounded-full shadow-[0_0_10px] ${state.user ? 'bg-emerald-400 shadow-emerald-400/50' : 'bg-rose-400 shadow-rose-400/50'}"></div>
+                                    ${state.user ? 'ONLINE' : 'CONNECTING...'}
+                                </div>
+                                ${state.isAdmin ? `
+                                    <button onclick="handleLogout()" class="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 transition-all">
+                                        <i data-lucide="lock" class="w-4 h-4"></i> LOCK
+                                    </button>
+                                ` : `
+                                    <button onclick="setView('login')" class="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/20 transition-all">
+                                        <i data-lucide="user" class="w-4 h-4"></i> ADMIN
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            `;
+
+            // Main Content
+            let mainContent = '';
+            
+            if (state.view === 'login') {
+                mainContent = renderLogin();
+            } else if (state.view === 'admin' && state.isAdmin) {
+                mainContent = renderAdmin();
+            } else {
+                mainContent = renderHome();
+            }
+
+            // Footer
+            const footer = `
+                <footer class="relative z-10 mt-12 py-8 text-center">
+                    <div class="inline-block px-6 py-3 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 text-slate-500 text-xs font-medium">
+                        <p>Made by SAWON M.</p>
+                    </div>
+                </footer>
+            `;
+
+            root.innerHTML = `
+                ${nav}
+                <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-200px)]">
+                    ${mainContent}
+                </main>
+                ${footer}
+            `;
+
+            // Modal
+            modalRoot.innerHTML = state.neuralTarget ? renderNeuralModal() : '';
+
+            // Initialize Icons
+            lucide.createIcons();
+        }
+
+        function renderLogin() {
+            return `
+                <div class="flex justify-center items-center py-20 animate-fadeIn px-4">
+                    <div class="w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 p-6 md:p-10 rounded-3xl shadow-2xl relative overflow-hidden group">
+                        <div class="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 animate-shimmer"></div>
+                        
+                        <div class="flex justify-center mb-8">
+                            <div class="p-5 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl border border-white/10">
+                                <i data-lucide="lock" class="w-8 h-8 text-cyan-200"></i>
+                            </div>
+                        </div>
+                        
+                        <h2 class="text-2xl font-bold text-center mb-2 text-white">Restricted Access</h2>
+                        <p class="text-center text-slate-400 text-sm mb-10">Identify yourself</p>
+
+                        <form onsubmit="handleLogin(event)" class="space-y-6 relative z-10">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 ml-1 mb-2">OPERATOR ID</label>
+                                <input name="username" type="text" class="w-full bg-black/20 border border-white/10 text-white p-4 rounded-xl focus:outline-none focus:border-cyan-500/50" placeholder="Username" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 ml-1 mb-2">ACCESS KEY</label>
+                                <input name="password" type="password" class="w-full bg-black/20 border border-white/10 text-white p-4 rounded-xl focus:outline-none focus:border-cyan-500/50" placeholder="Password" />
+                            </div>
+                            <div class="flex gap-4 pt-4">
+                                <button type="button" onclick="setView('home')" class="flex-1 bg-white/5 text-slate-400 py-4 rounded-xl text-sm font-bold hover:bg-white/10">Cancel</button>
+                                <button type="submit" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-4 rounded-xl text-sm font-bold hover:scale-[1.02] transition-transform">Authenticate</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAdmin() {
+            const f = state.adminForm;
+            return `
+                <div class="max-w-3xl mx-auto space-y-8 animate-fadeIn">
+                    <!-- Upload Box -->
+                    <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl">
+                        <div class="absolute -top-20 -right-20 w-60 h-60 bg-cyan-500/20 rounded-full blur-[80px]"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-8 border-b border-white/10 pb-6">
+                                <div class="flex items-center gap-4">
+                                    <div class="p-3 rounded-xl shadow-lg ${f.id ? 'bg-amber-500/20 border border-amber-500/30' : 'bg-gradient-to-br from-emerald-500 to-green-600'}">
+                                        <i data-lucide="${f.id ? 'pencil' : 'upload'}" class="w-6 h-6 ${f.id ? 'text-amber-300' : 'text-white'}"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-xl font-bold text-white">${f.id ? 'Edit Material' : 'Upload Material'}</h2>
+                                        <p class="text-sm text-slate-400">${f.id ? 'Modify record.' : 'Add new resource.'}</p>
+                                    </div>
+                                </div>
+                                ${f.id ? `<button onclick="cancelEdit()" class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-300 bg-white/5 rounded-full hover:bg-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i> CANCEL</button>` : ''}
+                            </div>
+
+                            <form onsubmit="handleAdminSubmit(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-slate-300 ml-1">ACADEMIC YEAR</label>
+                                    <select onchange="updateAdminForm('year', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
+                                        ${YEARS.map(y => `<option value="${y}" class="bg-slate-900" ${f.year === y ? 'selected' : ''}>${y}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-slate-300 ml-1">SEMESTER</label>
+                                    <select onchange="updateAdminForm('semester', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
+                                        ${SEMESTERS.map(s => `<option value="${s}" class="bg-slate-900" ${f.semester === s ? 'selected' : ''}>${s}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="col-span-1 md:col-span-2 space-y-2">
+                                    <label class="text-xs font-bold text-slate-300 ml-1">SUBJECT</label>
+                                    <input value="${f.subject}" oninput="updateAdminForm('subject', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Robotics" required />
+                                </div>
+                                <div class="col-span-1 md:col-span-2 space-y-2">
+                                    <label class="text-xs font-bold text-slate-300 ml-1">INSTRUCTOR</label>
+                                    <input value="${f.teacher}" oninput="updateAdminForm('teacher', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Dr. A. Smith" required />
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-slate-300 ml-1">CATEGORY</label>
+                                    <select onchange="updateAdminForm('category', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
+                                        ${CATEGORIES.map(c => `<option value="${c}" class="bg-slate-900" ${f.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-xs font-bold text-slate-300 ml-1">SECTION</label>
+                                    <select onchange="updateAdminForm('part', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
+                                        ${PARTS.map(p => `<option value="${p}" class="bg-slate-900" ${f.part === p ? 'selected' : ''}>${p}</option>`).join('')}
+                                    </select>
+                                </div>
+
+                                <div class="col-span-1 md:col-span-2 pt-2 pb-2 border-t border-b border-white/5">
+                                    <label class="text-xs font-bold text-slate-300 ml-1 mb-3 block">STORAGE METHOD</label>
+                                    <div class="flex gap-4">
+                                        <button type="button" onclick="updateAdminForm('storageType', 'link')" class="flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${f.storageType === 'link' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50' : 'bg-black/20 text-slate-400 border border-white/5'}">
+                                            <i data-lucide="link"></i> Link
+                                        </button>
+                                        <button type="button" onclick="updateAdminForm('storageType', 'file')" class="flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${f.storageType === 'file' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50' : 'bg-black/20 text-slate-400 border border-white/5'}">
+                                            <i data-lucide="file-up"></i> Upload
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-span-1 md:col-span-2 space-y-2">
+                                    ${f.storageType === 'link' ? `
+                                        <label class="text-xs font-bold text-slate-300 ml-1">LINK URL</label>
+                                        <div class="flex gap-2">
+                                            <div class="bg-black/20 p-3 rounded-full border border-white/10 flex items-center justify-center w-12 h-12"><i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i></div>
+                                            <input value="${f.link}" oninput="updateAdminForm('link', this.value)" type="url" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="https://..." />
+                                        </div>
+                                    ` : `
+                                        <label class="text-xs font-bold text-slate-300 ml-1">FILE (Max 800KB)</label>
+                                        <div class="flex gap-2 items-center">
+                                            <div class="bg-black/20 p-3 rounded-full border border-white/10 flex items-center justify-center w-12 h-12 shrink-0"><i data-lucide="file-up" class="w-4 h-4 text-purple-400"></i></div>
+                                            <input type="file" onchange="handleFileSelect(event)" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-500/10 file:text-purple-300 hover:file:bg-purple-500/20 cursor-pointer" />
+                                        </div>
+                                        ${f.fileName ? `<p class="text-xs text-emerald-400 ml-2 mt-1">Selected: ${f.fileName}</p>` : ''}
+                                    `}
+                                </div>
+
+                                <div class="col-span-1 md:col-span-2 mt-4">
+                                    <button type="submit" ${f.status === 'UPLOADING' || f.status === 'UPDATING' ? 'disabled' : ''} 
+                                        class="w-full py-4 rounded-full text-sm font-bold shadow-lg transition-all flex justify-center items-center gap-2 ${f.status === 'SUCCESS' ? 'bg-emerald-500 text-white' : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'}">
+                                        ${f.status === 'IDLE' ? (f.id ? 'UPDATE MATERIAL' : 'INITIATE UPLOAD') : f.status}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Manage List -->
+                    <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl">
+                        <div class="flex items-center gap-4 mb-6 border-b border-white/10 pb-6">
+                            <div class="p-3 bg-indigo-500/20 rounded-xl border border-indigo-500/30"><i data-lucide="database" class="w-6 h-6 text-indigo-300"></i></div>
+                            <h2 class="text-xl font-bold text-white">Archives</h2>
+                        </div>
+                        <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                            ${state.materials.map(m => `
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-black/20 rounded-xl border ${state.adminForm.id === m.id ? 'border-amber-500/50 bg-amber-900/10' : 'border-white/5'} hover:bg-black/40 transition-colors gap-4">
+                                    <div class="w-full sm:w-auto">
+                                        <h4 class="text-sm font-bold text-slate-200">${m.subject}</h4>
+                                        <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                            <span class="text-[10px] bg-white/5 px-2 py-0.5 rounded text-slate-400 border border-white/5">${m.category}</span>
+                                            <span class="text-[10px] text-slate-500">${m.year}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2 w-full sm:w-auto justify-end">
+                                        <button onclick="handleEdit('${m.id}')" class="p-2.5 rounded-lg border bg-slate-700/30 text-slate-400 border-slate-700/50 hover:text-white"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                        <button onclick="handleDelete('${m.id}')" class="p-2.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:text-rose-200"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderHome() {
+            const filtered = state.materials.filter(m => {
+                const y = state.filterYear === 'All' || m.year === state.filterYear;
+                const s = state.filterSem === 'All' || m.semester === state.filterSem;
+                const search = m.subject.toLowerCase().includes(state.searchSub.toLowerCase()) || m.teacher.toLowerCase().includes(state.searchSub.toLowerCase());
+                return y && s && search;
+            });
+
+            return `
+                <div class="space-y-8 animate-fadeIn">
+                    <!-- Filter Bar -->
+                    <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-4 md:p-6 rounded-3xl shadow-xl sticky top-20 z-30">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+                            <div class="relative">
+                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">YEAR</label>
+                                <select onchange="setFilter('filterYear', this.value)" class="w-full bg-black/20 border border-white/10 text-slate-200 h-12 px-4 rounded-full text-sm outline-none">
+                                    <option value="All" class="bg-slate-900">All Years</option>
+                                    ${YEARS.map(y => `<option value="${y}" class="bg-slate-900" ${state.filterYear === y ? 'selected' : ''}>${y}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="relative">
+                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEMESTER</label>
+                                <select onchange="setFilter('filterSem', this.value)" class="w-full bg-black/20 border border-white/10 text-slate-200 h-12 px-4 rounded-full text-sm outline-none">
+                                    <option value="All" class="bg-slate-900">All Semesters</option>
+                                    ${SEMESTERS.map(s => `<option value="${s}" class="bg-slate-900" ${state.filterSem === s ? 'selected' : ''}>${s}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="relative md:col-span-2">
+                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEARCH</label>
+                                <div class="relative">
+                                    <input oninput="setFilter('searchSub', this.value)" value="${state.searchSub}" type="text" class="w-full bg-black/20 border border-white/10 text-slate-200 h-12 pl-12 pr-4 rounded-full text-sm outline-none placeholder-slate-500" placeholder="Find subjects, teachers..." />
+                                    <i data-lucide="search" class="w-5 h-5 absolute left-4 top-3.5 text-slate-500"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grid -->
+                    ${state.loading ? `
+                        <div class="flex flex-col items-center justify-center py-32 opacity-70">
+                            <div class="relative">
+                                <div class="w-20 h-20 bg-cyan-500/20 rounded-full animate-ping absolute top-0 left-0"></div>
+                                <div class="w-20 h-20 bg-white/5 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center relative z-10"><i data-lucide="activity" class="w-8 h-8 text-cyan-400 animate-pulse"></i></div>
+                            </div>
+                            <p class="mt-6 text-sm font-medium tracking-widest text-cyan-200/70">LOADING ASSETS...</p>
+                        </div>
+                    ` : filtered.length === 0 ? `
+                        <div class="flex flex-col items-center justify-center py-32 bg-white/5 border border-white/5 rounded-3xl border-dashed">
+                            <i data-lucide="database" class="w-16 h-16 text-slate-600 mb-4 opacity-50"></i>
+                            <p class="text-slate-500 font-medium">No materials found</p>
+                        </div>
+                    ` : `
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${filtered.map(m => renderCard(m)).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function renderCard(data) {
+            // Check if it is a direct file download or external link
+            const isFile = !!data.fileData;
+            // We use onclick to handle file download, href for links
+            // Special handling for escaping strings in onclick
+            const safeData = isFile ? encodeURIComponent(data.fileData) : '';
+            const safeName = isFile ? encodeURIComponent(data.fileName || 'download') : '';
+
+            return `
+                <div class="group relative flex flex-col bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:border-white/20 transition-all duration-500 hover:-translate-y-1">
+                    <div class="h-1 w-full opacity-70 group-hover:opacity-100 transition-opacity ${isFile ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500' : 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500'}"></div>
+                    
+                    <div class="p-6 flex-1">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[10px] font-bold text-cyan-300 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20 uppercase tracking-wide">${data.category}</span>
+                            ${state.isAdmin ? `<button onclick="handleDelete('${data.id}')" class="p-1.5 rounded-lg text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/20 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+                        </div>
+                        
+                        <h3 class="text-lg font-bold text-white mb-2 group-hover:text-cyan-200 transition-colors line-clamp-1">${data.subject}</h3>
+                        
+                        <div class="flex items-center gap-2 mb-6">
+                            <div class="w-6 h-6 rounded-full bg-slate-700/50 flex items-center justify-center border border-white/10"><i data-lucide="user" class="w-3 h-3 text-slate-300"></i></div>
+                            <span class="text-sm text-slate-400 font-medium">${data.teacher}</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-black/20 rounded-xl p-2.5 border border-white/5">
+                                <span class="block text-slate-500 font-bold text-[9px] uppercase mb-0.5">Semester</span>
+                                <span class="text-xs text-slate-300 font-medium">${data.year} • ${data.semester.split(' ')[0]}</span>
+                            </div>
+                            <div class="bg-black/20 rounded-xl p-2.5 border border-white/5 text-right">
+                                <span class="block text-slate-500 font-bold text-[9px] uppercase mb-0.5">Segment</span>
+                                <span class="text-xs text-slate-300 font-medium">${data.part}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex border-t border-white/10 divide-x divide-white/10 bg-black/10">
+                        ${isFile 
+                            ? `<button onclick="handleDownload(decodeURIComponent('${safeData}'), decodeURIComponent('${safeName}'))" class="flex-1 p-4 flex items-center justify-center gap-2 text-sm font-medium text-purple-300 hover:bg-purple-500/10 transition-colors">
+                                <i data-lucide="database" class="w-4 h-4"></i> Retrieve
+                               </button>`
+                            : `<a href="${data.link}" target="_blank" class="flex-1 p-4 flex items-center justify-center gap-2 text-sm font-medium text-cyan-300 hover:bg-cyan-500/10 transition-colors">
+                                <i data-lucide="download" class="w-4 h-4"></i> Download
+                               </a>`
+                        }
+                        <button onclick="openNeural('${data.subject}')" class="flex-1 p-4 flex items-center justify-center gap-2 text-sm font-medium text-purple-300 hover:bg-purple-500/10 transition-colors relative overflow-hidden group/btn">
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/btn:animate-shimmer"></div>
+                            <i data-lucide="sparkles" class="w-4 h-4"></i> Neural
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderNeuralModal() {
+            const { activeTab, content, loading, data } = state.neural;
+            
+            return `
+                <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+                    <div class="w-full max-w-2xl bg-slate-900/60 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl shadow-purple-500/10 flex flex-col max-h-[80vh] overflow-hidden">
+                        <div class="flex justify-between items-center p-6 border-b border-white/5 bg-white/5">
+                            <div class="flex items-center gap-4">
+                                <div class="p-3 bg-purple-500/20 rounded-2xl border border-purple-500/30"><i data-lucide="brain" class="w-6 h-6 text-purple-300 animate-pulse"></i></div>
+                                <div>
+                                    <h2 class="text-xl font-bold text-white flex items-center gap-3">Neural Uplink <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">AI ACTIVE</span></h2>
+                                    <p class="text-sm text-slate-400 font-medium mt-0.5">Target: <span class="text-cyan-400">${state.neuralTarget}</span></p>
+                                </div>
+                            </div>
+                            <button onclick="closeNeural()" class="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-all"><i data-lucide="x" class="w-6 h-6"></i></button>
+                        </div>
+
+                        <div class="flex p-2 gap-2 bg-black/20 m-4 rounded-2xl">
+                            ${['concepts', 'quiz', 'strategy'].map(tab => `
+                                <button onclick="switchNeuralTab('${tab}')" class="flex-1 py-3 text-xs font-bold tracking-wider rounded-xl transition-all ${activeTab === tab ? 'bg-white/10 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}">
+                                    ${tab.toUpperCase()}
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        <div class="p-8 flex-1 overflow-y-auto min-h-[300px]">
+                            ${loading ? `
+                                <div class="h-full flex flex-col items-center justify-center space-y-6">
+                                    <div class="relative">
+                                        <div class="w-16 h-16 border-4 border-white/10 rounded-full"></div>
+                                        <div class="absolute top-0 left-0 w-16 h-16 border-4 border-t-cyan-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                    <p class="text-xs font-bold tracking-[0.2em] text-cyan-400 animate-pulse">SYNCHRONIZING...</p>
+                                </div>
+                            ` : `
+                                <div class="prose prose-invert prose-sm max-w-none text-slate-200 whitespace-pre-wrap leading-relaxed">${content}</div>
+                            `}
+                        </div>
+                        <div class="p-4 border-t border-white/5 bg-black/20 text-center"><p class="text-[10px] text-slate-500 font-medium">GENERATED BY GEMINI 2.0</p></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initial Render
+        render();
+    </script>
+</body>
+</html>
