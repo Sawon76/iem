@@ -282,7 +282,11 @@
             render(); 
         };
         
-        window.updateAdminForm = (k, v) => { state.adminForm[k] = v; render(); };
+        // FIX: Modified to accept an optional 'shouldRender' parameter
+        window.updateAdminForm = (k, v, shouldRender = true) => { 
+            state.adminForm[k] = v; 
+            if (shouldRender) render(); 
+        };
 
         window.handleLogin = async (e) => {
             e.preventDefault();
@@ -539,15 +543,18 @@
                             </div>
                             <div class="col-span-1 md:col-span-2 space-y-2">
                                 <label class="text-xs font-bold text-slate-300 ml-1">SUBJECT NAME</label>
-                                <input value="${f.subject}" oninput="updateAdminForm('subject', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Advanced Robotics" required />
+                                <!-- FIX: Added ', false' to prevent re-render on input -->
+                                <input value="${f.subject}" oninput="updateAdminForm('subject', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Advanced Robotics" required />
                             </div>
                             <div class="col-span-1 md:col-span-2 space-y-2">
                                 <label class="text-xs font-bold text-slate-300 ml-1">TOPIC NAME</label>
-                                <input value="${f.topic}" oninput="updateAdminForm('topic', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Kinematics" required />
+                                <!-- FIX: Added ', false' to prevent re-render on input -->
+                                <input value="${f.topic}" oninput="updateAdminForm('topic', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Kinematics" required />
                             </div>
                             <div class="col-span-1 md:col-span-2 space-y-2">
                                 <label class="text-xs font-bold text-slate-300 ml-1">INSTRUCTOR</label>
-                                <input value="${f.teacher}" oninput="updateAdminForm('teacher', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Dr. A. Smith" required />
+                                <!-- FIX: Added ', false' to prevent re-render on input -->
+                                <input value="${f.teacher}" oninput="updateAdminForm('teacher', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Dr. A. Smith" required />
                             </div>
                             <div class="space-y-2">
                                 <label class="text-xs font-bold text-slate-300 ml-1">CATEGORY</label>
@@ -579,7 +586,8 @@
                                     <label class="text-xs font-bold text-slate-300 ml-1">LINK URL</label>
                                     <div class="flex gap-2">
                                         <div class="bg-black/20 p-3 rounded-full border border-white/10 flex items-center justify-center w-12 h-12"><i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i></div>
-                                        <input value="${f.link}" oninput="updateAdminForm('link', this.value)" type="url" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="https://..." />
+                                        <!-- FIX: Added ', false' to prevent re-render on input -->
+                                        <input value="${f.link}" oninput="updateAdminForm('link', this.value, false)" type="url" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="https://..." />
                                     </div>
                                 ` : `
                                     <label class="text-xs font-bold text-slate-300 ml-1">FILE (Max 25MB)</label>
