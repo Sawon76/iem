@@ -58,36 +58,42 @@
     <div id="modal-root" class="relative z-50"></div>
 
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        // --- Configuration ---
-        // Provided by environment or manually set
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // --- CONFIGURATION REQUIRED ---
+        // 1. Go to Firebase Console -> Project Settings
+        // 2. Copy your web app config object
+        // 3. Replace the object below with yours
+        const firebaseConfig = {
+  	apiKey: "AIzaSyAGYIpiXh23CHTml5XUzh5TEotrQiZ7Mqc",
+  	authDomain: "iem-da93d.firebaseapp.com",
+  	projectId: "iem-da93d",
+  	storageBucket: "iem-da93d.firebasestorage.app",
+  	messagingSenderId: "889019048288",
+  	appId: "1:889019048288:web:76d682c4531cc3745a7e05",
+  	measurementId: "G-MCYLDP9YBQ"
+	};
+
+        const appId = 'industrial-study-hub-v1';
         const apiKey = ""; // Gemini API Key (Runtime provided)
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
 
         // --- State Management ---
         const state = {
             user: null,
             isAdmin: false,
-            view: 'home', // 'home', 'login', 'admin'
+            view: 'home', 
             materials: [],
             loading: true,
             filterYear: 'All',
             filterSem: 'All',
             searchSub: '',
-            neuralTarget: null, // Subject for AI analysis
+            neuralTarget: null,
+            appError: null, // For setup errors
             
-            // Admin Form State
             adminForm: {
-                id: null, // For editing
+                id: null,
                 year: '1st Year',
                 semester: '1st Semester',
                 subject: '',
@@ -95,13 +101,12 @@
                 category: 'Study Material',
                 part: 'Part A',
                 link: '',
-                storageType: 'link', // 'link' or 'file'
+                storageType: 'link',
                 fileData: null,
                 fileName: '',
-                status: 'IDLE' // 'IDLE', 'UPLOADING', 'SUCCESS', 'ERROR'
+                status: 'IDLE'
             },
 
-            // Neural Modal State
             neural: {
                 activeTab: 'concepts',
                 content: '',
@@ -110,51 +115,77 @@
             }
         };
 
+        // --- Globals ---
+        let app, auth, db;
+
         // --- Constants ---
         const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
         const SEMESTERS = ['1st Semester', '2nd Semester'];
         const CATEGORIES = ['Study Material', 'Term Questions', 'CT Questions', 'Lab Manual'];
         const PARTS = ['Part A', 'Part B', 'Complete'];
 
-        // --- Core Logic ---
+        // --- Initialization ---
+        function init() {
+            try {
+                // Check if user has configured Firebase
+                if (firebaseConfig.apiKey === "PASTE_YOUR_API_KEY_HERE") {
+                    throw new Error("Missing Firebase Configuration");
+                }
 
-        // Auth Listener
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        };
-        
-        onAuthStateChanged(auth, (currentUser) => {
-            state.user = currentUser;
-            if (currentUser) {
-                setupDataListener();
-            }
-            render();
-        });
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
 
-        initAuth();
+                const initAuth = async () => {
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (e) {
+                        console.error("Auth Error:", e);
+                        state.appError = "Authentication Failed: " + e.message;
+                        render();
+                    }
+                };
+                
+                onAuthStateChanged(auth, (currentUser) => {
+                    state.user = currentUser;
+                    if (currentUser) {
+                        setupDataListener();
+                    }
+                    render();
+                });
+
+                initAuth();
+            } catch (e) {
+                state.appError = e.message;
+                state.loading = false;
+                render();
+            }
+        }
 
         // Data Listener
         let unsubscribeData = null;
         function setupDataListener() {
             if (unsubscribeData) unsubscribeData();
             
-            const materialsRef = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
-            unsubscribeData = onSnapshot(materialsRef, (snapshot) => {
-                const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                // Sort by createdAt descending
-                docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                state.materials = docs;
+            try {
+                const materialsRef = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
+                unsubscribeData = onSnapshot(materialsRef, (snapshot) => {
+                    const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                    state.materials = docs;
+                    state.loading = false;
+                    render();
+                }, (err) => {
+                    console.error("Fetch Error:", err);
+                    // Don't block UI on fetch error, just show empty
+                    state.loading = false;
+                    render();
+                });
+            } catch (err) {
+                console.error("DB Error:", err);
                 state.loading = false;
                 render();
-            }, (err) => {
-                console.error("Fetch Error:", err);
-                state.loading = false;
-                render();
-            });
+            }
         }
 
         // --- Actions ---
@@ -190,7 +221,6 @@
             render();
         };
 
-        // Admin Form Actions
         window.updateAdminForm = (key, value) => {
             state.adminForm[key] = value;
             render();
@@ -200,7 +230,7 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            if (file.size > 800 * 1024) { // 800KB Limit
+            if (file.size > 800 * 1024) { 
                 alert("File too large! Max 800KB for direct storage. Use Link for larger files.");
                 e.target.value = '';
                 return;
@@ -398,7 +428,14 @@
             const root = document.getElementById('root');
             const modalRoot = document.getElementById('modal-root');
             
-            // Navbar - Responsive Stacking
+            // Check for critical setup error
+            if (state.appError === "Missing Firebase Configuration") {
+                root.innerHTML = renderSetupScreen();
+                lucide.createIcons();
+                return;
+            }
+
+            // Navbar
             const nav = `
                 <nav class="relative z-20 mx-4 mt-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg shadow-black/20">
                     <div class="max-w-7xl mx-auto px-6">
@@ -468,6 +505,35 @@
 
             // Initialize Icons
             lucide.createIcons();
+        }
+
+        function renderSetupScreen() {
+            return `
+                <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+                    <div class="p-4 bg-amber-500/20 rounded-full mb-6">
+                        <i data-lucide="alert-triangle" class="w-12 h-12 text-amber-400"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white mb-2">Setup Required</h1>
+                    <p class="text-slate-400 max-w-md mb-8">
+                        This application requires a Firebase Database connection to function.
+                    </p>
+                    <div class="bg-black/40 p-6 rounded-2xl border border-white/10 text-left max-w-2xl w-full">
+                        <p class="text-sm font-bold text-slate-300 mb-4">INSTRUCTIONS:</p>
+                        <ol class="list-decimal list-inside text-sm text-slate-400 space-y-2 mb-6">
+                            <li>Open this HTML file in a text editor (Notepad, VS Code, etc).</li>
+                            <li>Scroll to the <code class="text-cyan-400 bg-black/50 px-1 rounded">const firebaseConfig</code> section (around line 60).</li>
+                            <li>Paste your Firebase configuration keys inside the object.</li>
+                            <li>Save the file and refresh this page.</li>
+                        </ol>
+                        <div class="bg-black/50 p-4 rounded-xl border border-white/5 font-mono text-xs text-slate-500">
+                            const firebaseConfig = {<br>
+                            &nbsp;&nbsp;apiKey: "YOUR_KEYS_HERE",<br>
+                            &nbsp;&nbsp;...<br>
+                            };
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         function renderLogin() {
@@ -786,6 +852,7 @@
         }
 
         // Initial Render
+        init();
         render();
     </script>
 </body>
