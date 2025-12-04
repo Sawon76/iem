@@ -18,37 +18,133 @@
         body { font-family: 'Inter', sans-serif; }
         .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse-slow { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.5; } }
-        .animate-pulse-slow { animation: pulse-slow 4s infinite; }
+        
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+
+        /* Dropdown Option Styling - Forces dark theme on options */
+        select option {
+            background-color: #000000 !important;
+            color: #e2e8f0 !important;
+            padding: 10px;
+        }
+
+        /* Grid Pattern Styles */
+        .grid-pattern-container {
+            position: fixed;
+            top: -50%;
+            left: 0;
+            right: 0;
+            height: 200%;
+            transform: skewY(12deg);
+            z-index: 0;
+            pointer-events: none;
+            mask-image: radial-gradient(600px circle at center, white, transparent);
+            -webkit-mask-image: radial-gradient(600px circle at center, white, transparent);
+        }
     </style>
 </head>
-<body class="bg-[#0f172a] text-slate-200 selection:bg-cyan-500/30 selection:text-cyan-100 min-h-screen overflow-x-hidden relative">
+<body class="bg-black text-slate-200 selection:bg-cyan-500/30 selection:text-cyan-100 min-h-screen overflow-x-hidden relative">
 
-    <!-- Background Effects -->
-    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-600/20 rounded-full blur-[120px] animate-pulse-slow"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-600/20 rounded-full blur-[120px] animate-pulse-slow" style="animation-delay: 2s;"></div>
+    <!-- Background: Interactive Grid Pattern -->
+    <div class="grid-pattern-container">
+        <canvas id="interactive-grid-canvas" class="w-full h-full"></canvas>
     </div>
 
     <!-- Main App Container -->
     <div id="root" class="relative z-10"></div>
     <div id="modal-root" class="relative z-50"></div>
 
+    <script>
+        // --- INTERACTIVE GRID BACKGROUND LOGIC ---
+        (function setupInteractiveGrid() {
+            const canvas = document.getElementById('interactive-grid-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            let width, height;
+            const squareSize = 40; 
+            const gridGap = 1;     
+            
+            let mouseX = -1000;
+            let mouseY = -1000;
+
+            function resize() {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                width = rect.width;
+                height = rect.height;
+                canvas.width = width;
+                canvas.height = height;
+                draw();
+            }
+
+            window.addEventListener('mousemove', (e) => {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                mouseX = e.clientX - rect.left;
+                mouseY = e.clientY - rect.top;
+                const skewRad = 12 * (Math.PI / 180);
+                const skewOffset = (e.clientX - (window.innerWidth / 2)) * Math.tan(skewRad);
+                mouseY = (e.clientY - rect.top) - skewOffset;
+            });
+
+            function draw() {
+                ctx.clearRect(0, 0, width, height);
+                const cols = Math.ceil(width / squareSize);
+                const rows = Math.ceil(height / squareSize);
+                
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                
+                for (let i = 0; i <= cols; i++) {
+                    ctx.moveTo(i * squareSize, 0);
+                    ctx.lineTo(i * squareSize, height);
+                }
+                for (let j = 0; j <= rows; j++) {
+                    ctx.moveTo(0, j * squareSize);
+                    ctx.lineTo(width, j * squareSize);
+                }
+                ctx.stroke();
+
+                if (mouseX > 0 && mouseY > 0) {
+                    const hoverCol = Math.floor(mouseX / squareSize);
+                    const hoverRow = Math.floor(mouseY / squareSize);
+                    
+                    ctx.fillStyle = "rgba(100, 150, 255, 0.2)";
+                    ctx.fillRect(hoverCol * squareSize + 1, hoverRow * squareSize + 1, squareSize - 2, squareSize - 2);
+
+                    ctx.fillStyle = "rgba(100, 150, 255, 0.05)";
+                    ctx.fillRect(hoverCol * squareSize + 1, (hoverRow - 1) * squareSize + 1, squareSize - 2, squareSize - 2);
+                    ctx.fillRect(hoverCol * squareSize + 1, (hoverRow + 1) * squareSize + 1, squareSize - 2, squareSize - 2);
+                    ctx.fillRect((hoverCol - 1) * squareSize + 1, hoverRow * squareSize + 1, squareSize - 2, squareSize - 2);
+                    ctx.fillRect((hoverCol + 1) * squareSize + 1, hoverRow * squareSize + 1, squareSize - 2, squareSize - 2);
+                }
+                requestAnimationFrame(draw);
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+            requestAnimationFrame(draw);
+        })();
+    </script>
+
     <script type="module">
         // --- GITHUB CONFIGURATION ---
-        // REPLACE THESE VALUES WITH YOUR REPO DETAILS
         const GITHUB_CONFIG = {
-            owner: "Sawon76", // e.g., 'sawon-m'
-            repo: "iem",        // e.g., 'study-hub-db'
-            branch: "main",                // Usually 'main' or 'master'
-            dbPath: "data.json"            // The file storing your data
+            owner: "Sawon76", 
+            repo: "iem",        
+            branch: "main",
+            dbPath: "data.json"
         };
 
         const apiKey = ""; // Gemini API Key (Runtime provided)
+
+        // --- Constants ---
+        const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+        const SEMESTERS = ['1st Semester', '2nd Semester'];
+        const CATEGORIES = ['Study Material', 'Term Questions', 'CT Questions', 'Lab Manual'];
+        const PARTS = ['Part A', 'Part B', 'Complete'];
 
         // --- State ---
         const state = {
@@ -58,8 +154,9 @@
             view: 'home',
             materials: [],
             loading: true,
-            filterYear: 'All',
-            filterSem: 'All',
+            filterYear: YEARS[0],
+            filterSem: SEMESTERS[0],
+            filterSubject: 'All', 
             searchSub: '',
             neuralTarget: null,
             
@@ -68,6 +165,7 @@
                 year: '1st Year',
                 semester: '1st Semester',
                 subject: '',
+                topic: '', 
                 teacher: '',
                 category: 'Study Material',
                 part: 'Part A',
@@ -81,16 +179,9 @@
             neural: { activeTab: 'concepts', content: '', loading: false, data: {} }
         };
 
-        // --- Constants ---
-        const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
-        const SEMESTERS = ['1st Semester', '2nd Semester'];
-        const CATEGORIES = ['Study Material', 'Term Questions', 'CT Questions', 'Lab Manual'];
-        const PARTS = ['Part A', 'Part B', 'Complete'];
-
         // --- Initialization ---
         async function init() {
             if (state.token) {
-                // Verify token by fetching user
                 try {
                     const user = await githubAPI('/user');
                     state.user = user;
@@ -124,33 +215,27 @@
             render();
             
             try {
-                // 1. Try fetching via API (Admin - fresh data)
                 if (state.token) {
                     try {
                         const file = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dbPath}`);
-                        const content = atob(file.content); // Decode Base64
+                        const content = atob(file.content);
                         state.materials = JSON.parse(content);
                     } catch (e) {
-                        // File might not exist yet
                         if (e.message.includes('404')) state.materials = [];
                         else throw e;
                     }
-                } 
-                // 2. Try fetching Raw (Public - cached but free limit)
-                else {
-                    const cacheBuster = new Date().getTime(); // Prevent browser caching
+                } else {
+                    const cacheBuster = new Date().getTime();
                     const url = `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${GITHUB_CONFIG.dbPath}?t=${cacheBuster}`;
                     const res = await fetch(url);
                     if (res.ok) {
                         state.materials = await res.json();
                     } else {
-                        // If 404, assume empty DB
                         state.materials = [];
                     }
                 }
             } catch (err) {
                 console.error("Fetch failed:", err);
-                // Keep empty array
             } finally {
                 state.loading = false;
                 render();
@@ -158,61 +243,60 @@
         }
 
         async function saveToGitHub(newMaterials) {
-            // 1. Get current file SHA (needed for update)
             let sha = null;
             try {
                 const current = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dbPath}`);
                 sha = current.sha;
-            } catch (e) { /* File doesn't exist yet, that's fine */ }
+            } catch (e) {}
 
-            // 2. Push update
-            const content = btoa(JSON.stringify(newMaterials, null, 2)); // Encode Base64
+            const content = btoa(JSON.stringify(newMaterials, null, 2));
             
             await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dbPath}`, 'PUT', {
                 message: "Update study materials DB",
                 content: content,
-                sha: sha // Include SHA if updating
+                sha: sha
             });
         }
 
         async function uploadFileToGitHub(fileData, fileName) {
-            // fileData is data:mime;base64,.....
-            // GitHub wants just the base64 part
             const base64Content = fileData.split(',')[1];
-            const path = `uploads/${Date.now()}_${fileName.replace(/\s/g, '_')}`; // Unique path
+            const path = `uploads/${Date.now()}_${fileName.replace(/\s/g, '_')}`;
 
             const res = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${path}`, 'PUT', {
                 message: `Upload ${fileName}`,
                 content: base64Content
             });
 
-            // Construct the raw link for the student to download
-            // Note: We use the raw link for viewing/downloading
             return `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${path}`;
         }
 
         // --- Actions ---
 
         window.setView = (view) => { state.view = view; render(); };
-        window.setFilter = (k, v) => { state[k] = v; render(); };
+        
+        window.setFilter = (k, v) => { 
+            state[k] = v; 
+            if (k === 'filterYear' || k === 'filterSem') {
+                state.filterSubject = 'All';
+            }
+            render(); 
+        };
+        
         window.updateAdminForm = (k, v) => { state.adminForm[k] = v; render(); };
 
         window.handleLogin = async (e) => {
             e.preventDefault();
             const token = e.target.token.value.trim();
             if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-                alert("Invalid Token format. It usually starts with 'ghp_'.");
+                alert("Invalid Token format.");
                 return;
             }
             
             localStorage.setItem('gh_token', token);
             state.token = token;
-            await init(); // Verify token
-            if (state.user) {
-                state.view = 'admin';
-            } else {
-                alert("Token verification failed. Check permissions.");
-            }
+            await init(); 
+            if (state.user) state.view = 'admin';
+            else alert("Token verification failed.");
             render();
         };
 
@@ -228,9 +312,8 @@
         window.handleFileSelect = (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            // 25MB limit for GitHub API via browser is safer, though API supports 100MB
             if (file.size > 25 * 1024 * 1024) { 
-                alert("File too large! GitHub API limits browser uploads. Keep under 25MB.");
+                alert("File too large! Keep under 25MB.");
                 e.target.value = '';
                 return;
             }
@@ -251,19 +334,17 @@
 
             try {
                 let downloadUrl = form.link;
-
-                // 1. Handle File Upload if selected
                 if (form.storageType === 'file') {
                     if(!form.fileData) throw new Error("No file selected");
                     downloadUrl = await uploadFileToGitHub(form.fileData, form.fileName);
                 }
 
-                // 2. Prepare Data Object
                 const newItem = {
                     id: form.id || crypto.randomUUID(),
                     year: form.year,
                     semester: form.semester,
                     subject: form.subject,
+                    topic: form.topic || '', 
                     teacher: form.teacher,
                     category: form.category,
                     part: form.part,
@@ -272,7 +353,6 @@
                     createdAt: new Date().toISOString()
                 };
 
-                // 3. Update Local List & Save to DB
                 let newMaterials = [...state.materials];
                 if (form.id) {
                     const idx = newMaterials.findIndex(m => m.id === form.id);
@@ -283,14 +363,10 @@
 
                 await saveToGitHub(newMaterials);
                 
-                // Success
                 state.materials = newMaterials;
                 state.adminForm.status = 'SUCCESS';
                 render();
-                setTimeout(() => {
-                    resetAdminForm();
-                    render();
-                }, 1500);
+                setTimeout(() => { resetAdminForm(); render(); }, 1500);
 
             } catch (err) {
                 console.error(err);
@@ -301,22 +377,26 @@
         };
 
         window.handleDelete = async (id) => {
-            if(!confirm("Are you sure? This removes it from the list (file remains in repo history).")) return;
-            
+            if(!confirm("Permanently delete this entry?")) return;
             try {
                 const newMaterials = state.materials.filter(m => m.id !== id);
                 await saveToGitHub(newMaterials);
                 state.materials = newMaterials;
                 render();
-            } catch (err) {
-                alert("Delete Failed: " + err.message);
-            }
+            } catch (err) { alert("Delete Failed: " + err.message); }
         };
 
         window.handleEdit = (id) => {
             const item = state.materials.find(m => m.id === id);
             if (!item) return;
-            state.adminForm = { ...state.adminForm, ...item, id: item.id, storageType: item.isFile ? 'file' : 'link', status: 'IDLE' };
+            state.adminForm = { 
+                ...state.adminForm, 
+                ...item, 
+                id: item.id, 
+                topic: item.topic || '',
+                storageType: item.isFile ? 'file' : 'link', 
+                status: 'IDLE' 
+            };
             window.scrollTo({top:0, behavior:'smooth'});
             render();
         };
@@ -325,7 +405,7 @@
 
         function resetAdminForm() {
             state.adminForm = {
-                id: null, year: YEARS[0], semester: SEMESTERS[0], subject: '', teacher: '', 
+                id: null, year: YEARS[0], semester: SEMESTERS[0], subject: '', topic: '', teacher: '', 
                 category: 'Study Material', part: 'Part A', link: '', storageType: 'link', 
                 fileData: null, fileName: '', status: 'IDLE'
             };
@@ -349,7 +429,7 @@
 
             const footer = `
                 <footer class="relative z-10 mt-12 py-8 text-center text-slate-500 text-xs">
-                    <div class="inline-block px-4 py-2 rounded-full bg-white/5 border border-white/5">
+                    <div class="inline-block px-4 py-2 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm">
                         Made by SAWON M. • GitHub Powered
                     </div>
                 </footer>`;
@@ -361,7 +441,7 @@
         function renderSetup() {
             return `
                 <div class="min-h-screen flex items-center justify-center p-4 text-center">
-                    <div class="bg-black/40 p-8 rounded-2xl border border-white/10 max-w-lg">
+                    <div class="bg-black/40 backdrop-blur-md p-8 rounded-2xl border border-white/10 max-w-lg">
                         <i data-lucide="github" class="w-12 h-12 text-white mx-auto mb-4"></i>
                         <h1 class="text-xl font-bold text-white mb-2">GitHub Setup Required</h1>
                         <p class="text-slate-400 text-sm mb-6">Open the code file and edit the <code>GITHUB_CONFIG</code> object at the top.</p>
@@ -383,13 +463,8 @@
                     <div class="max-w-7xl mx-auto px-6">
                         <div class="flex flex-col md:flex-row items-center justify-between min-h-[5rem] py-4 md:py-0 gap-4">
                             <div class="flex items-center gap-3 cursor-pointer" onclick="setView('home')">
-                                <div class="p-2 bg-gradient-to-tr from-cyan-500 to-purple-500 rounded-xl shadow-lg">
-                                    <i data-lucide="cpu" class="w-6 h-6 text-white"></i>
-                                </div>
-                                <div class="flex flex-col">
-                                    <span class="text-xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">IEM'21</span>
-                                    <span class="text-[10px] font-bold tracking-[0.2em] text-cyan-400/80">KUET</span>
-                                </div>
+                                <img src="iem.png" alt="KUET Logo" class="h-12 w-auto object-contain" />
+                                <span class="text-xl font-bold text-slate-200">KUET IEM'21</span>
                             </div>
                             <div class="flex items-center gap-4">
                                 <div class="hidden md:flex items-center gap-2 text-xs font-medium text-slate-400 bg-black/20 px-3 py-1 rounded-full border border-white/5">
@@ -435,53 +510,115 @@
             const f = state.adminForm;
             return `
                 <div class="max-w-3xl mx-auto space-y-8 animate-fadeIn">
-                    <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 relative overflow-hidden">
-                        <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
-                            <div class="flex items-center gap-3">
-                                <div class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400"><i data-lucide="${f.id ? 'pencil' : 'upload'}" class="w-5 h-5"></i></div>
-                                <h2 class="font-bold text-white">${f.id ? 'Edit Entry' : 'Upload Material'}</h2>
-                            </div>
-                            ${f.id ? `<button onclick="cancelEdit()" class="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1"><i data-lucide="x" class="w-3 h-3"></i> CANCEL EDIT</button>` : ''}
-                        </div>
-                        <form onsubmit="handleAdminSubmit(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <select onchange="updateAdminForm('year', this.value)" class="bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none">${YEARS.map(y => `<option class="bg-slate-900" ${f.year === y ? 'selected':''}>${y}</option>`).join('')}</select>
-                            <select onchange="updateAdminForm('semester', this.value)" class="bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none">${SEMESTERS.map(s => `<option class="bg-slate-900" ${f.semester === s ? 'selected':''}>${s}</option>`).join('')}</select>
-                            
-                            <input value="${f.subject}" oninput="updateAdminForm('subject', this.value)" class="md:col-span-2 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none" placeholder="Subject Name" required />
-                            <input value="${f.teacher}" oninput="updateAdminForm('teacher', this.value)" class="md:col-span-2 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none" placeholder="Instructor Name" required />
-                            
-                            <select onchange="updateAdminForm('category', this.value)" class="bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none">${CATEGORIES.map(c => `<option class="bg-slate-900" ${f.category === c ? 'selected':''}>${c}</option>`).join('')}</select>
-                            <select onchange="updateAdminForm('part', this.value)" class="bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none">${PARTS.map(p => `<option class="bg-slate-900" ${f.part === p ? 'selected':''}>${p}</option>`).join('')}</select>
-
-                            <div class="md:col-span-2 pt-2 border-t border-white/5">
-                                <div class="flex gap-2 mb-3">
-                                    <button type="button" onclick="updateAdminForm('storageType', 'link')" class="flex-1 py-2 text-xs font-bold rounded-lg border transition-all ${f.storageType === 'link' ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300' : 'border-white/5 text-slate-500'}">EXTERNAL LINK</button>
-                                    <button type="button" onclick="updateAdminForm('storageType', 'file')" class="flex-1 py-2 text-xs font-bold rounded-lg border transition-all ${f.storageType === 'file' ? 'bg-purple-500/20 border-purple-500/50 text-purple-300' : 'border-white/5 text-slate-500'}">DIRECT UPLOAD</button>
+                    <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl">
+                        <div class="flex items-center justify-between mb-8 border-b border-white/10 pb-6">
+                            <div class="flex items-center gap-4">
+                                <div class="p-3 rounded-xl shadow-lg ${f.id ? 'bg-amber-500/20 border border-amber-500/30' : 'bg-gradient-to-br from-emerald-500 to-green-600'}">
+                                    <i data-lucide="${f.id ? 'pencil' : 'upload'}" class="w-6 h-6 ${f.id ? 'text-amber-300' : 'text-white'}"></i>
                                 </div>
-                                ${f.storageType === 'link' 
-                                    ? `<input value="${f.link}" oninput="updateAdminForm('link', this.value)" class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none" placeholder="Paste Google Drive link..." />`
-                                    : `<div class="relative"><input type="file" onchange="handleFileSelect(event)" class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-400 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-purple-500/20 file:text-purple-300" /></div>`
-                                }
+                                <div>
+                                    <h2 class="text-xl font-bold text-white">${f.id ? 'Edit Material' : 'Upload Material'}</h2>
+                                    <p class="text-sm text-slate-400">${f.id ? 'Modify record.' : 'Add new resource.'}</p>
+                                </div>
+                            </div>
+                            ${f.id ? `<button onclick="cancelEdit()" class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-300 bg-white/5 rounded-full hover:bg-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i> CANCEL</button>` : ''}
+                        </div>
+
+                        <form onsubmit="handleAdminSubmit(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-slate-300 ml-1">ACADEMIC YEAR</label>
+                                <select onchange="updateAdminForm('year', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
+                                    ${YEARS.map(y => `<option value="${y}" class="bg-slate-900" ${f.year === y ? 'selected' : ''}>${y}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-slate-300 ml-1">SEMESTER</label>
+                                <select onchange="updateAdminForm('semester', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
+                                    ${SEMESTERS.map(s => `<option value="${s}" class="bg-slate-900" ${f.semester === s ? 'selected' : ''}>${s}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="col-span-1 md:col-span-2 space-y-2">
+                                <label class="text-xs font-bold text-slate-300 ml-1">SUBJECT NAME</label>
+                                <input value="${f.subject}" oninput="updateAdminForm('subject', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Advanced Robotics" required />
+                            </div>
+                            <div class="col-span-1 md:col-span-2 space-y-2">
+                                <label class="text-xs font-bold text-slate-300 ml-1">TOPIC NAME</label>
+                                <input value="${f.topic}" oninput="updateAdminForm('topic', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Kinematics" required />
+                            </div>
+                            <div class="col-span-1 md:col-span-2 space-y-2">
+                                <label class="text-xs font-bold text-slate-300 ml-1">INSTRUCTOR</label>
+                                <input value="${f.teacher}" oninput="updateAdminForm('teacher', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Dr. A. Smith" required />
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-slate-300 ml-1">CATEGORY</label>
+                                <select onchange="updateAdminForm('category', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
+                                    ${CATEGORIES.map(c => `<option value="${c}" class="bg-slate-900" ${f.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-slate-300 ml-1">SECTION</label>
+                                <select onchange="updateAdminForm('part', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
+                                    ${PARTS.map(p => `<option value="${p}" class="bg-slate-900" ${f.part === p ? 'selected' : ''}>${p}</option>`).join('')}
+                                </select>
                             </div>
 
-                            <button type="submit" ${f.status !== 'IDLE' ? 'disabled' : ''} class="md:col-span-2 py-3 mt-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:shadow-lg hover:shadow-cyan-500/20 transition-all">
-                                ${f.status === 'IDLE' ? (f.id ? 'SAVE CHANGES' : 'UPLOAD TO REPO') : `<span class="animate-pulse">${f.status}...</span>`}
-                            </button>
+                            <div class="col-span-1 md:col-span-2 pt-2 pb-2 border-t border-b border-white/5">
+                                <label class="text-xs font-bold text-slate-300 ml-1 mb-3 block">STORAGE METHOD</label>
+                                <div class="flex gap-4">
+                                    <button type="button" onclick="updateAdminForm('storageType', 'link')" class="flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${f.storageType === 'link' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50' : 'bg-black/20 text-slate-400 border border-white/5'}">
+                                        <i data-lucide="link"></i> Link
+                                    </button>
+                                    <button type="button" onclick="updateAdminForm('storageType', 'file')" class="flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${f.storageType === 'file' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50' : 'bg-black/20 text-slate-400 border border-white/5'}">
+                                        <i data-lucide="file-up"></i> Upload
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="col-span-1 md:col-span-2 space-y-2">
+                                ${f.storageType === 'link' ? `
+                                    <label class="text-xs font-bold text-slate-300 ml-1">LINK URL</label>
+                                    <div class="flex gap-2">
+                                        <div class="bg-black/20 p-3 rounded-full border border-white/10 flex items-center justify-center w-12 h-12"><i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i></div>
+                                        <input value="${f.link}" oninput="updateAdminForm('link', this.value)" type="url" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="https://..." />
+                                    </div>
+                                ` : `
+                                    <label class="text-xs font-bold text-slate-300 ml-1">FILE (Max 25MB)</label>
+                                    <div class="flex gap-2 items-center">
+                                        <div class="bg-black/20 p-3 rounded-full border border-white/10 flex items-center justify-center w-12 h-12 shrink-0"><i data-lucide="file-up" class="w-4 h-4 text-purple-400"></i></div>
+                                        <input type="file" onchange="handleFileSelect(event)" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-500/10 file:text-purple-300 hover:file:bg-purple-500/20 cursor-pointer" />
+                                    </div>
+                                    ${f.fileName ? `<p class="text-xs text-emerald-400 ml-2 mt-1">Selected: ${f.fileName}</p>` : ''}
+                                `}
+                            </div>
+
+                            <div class="col-span-1 md:col-span-2 mt-4">
+                                <button type="submit" ${f.status === 'UPLOADING' || f.status === 'UPDATING' ? 'disabled' : ''} 
+                                    class="w-full py-4 rounded-full text-sm font-bold shadow-lg transition-all flex justify-center items-center gap-2 ${f.status === 'SUCCESS' ? 'bg-emerald-500 text-white' : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'}">
+                                    ${f.status === 'IDLE' ? (f.id ? 'UPDATE MATERIAL' : 'INITIATE UPLOAD') : f.status}
+                                </button>
+                            </div>
                         </form>
                     </div>
 
-                    <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6">
-                        <h3 class="text-sm font-bold text-slate-400 mb-4 px-2">DATABASE ENTRIES</h3>
-                        <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl">
+                        <div class="flex items-center gap-4 mb-6 border-b border-white/10 pb-6">
+                            <div class="p-3 bg-indigo-500/20 rounded-xl border border-indigo-500/30"><i data-lucide="database" class="w-6 h-6 text-indigo-300"></i></div>
+                            <h2 class="text-xl font-bold text-white">Archives</h2>
+                        </div>
+                        <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                             ${state.materials.map(m => `
-                                <div class="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5">
-                                    <div>
-                                        <div class="font-bold text-slate-200 text-sm">${m.subject}</div>
-                                        <div class="text-xs text-slate-500 mt-1">${m.category} • ${m.year}</div>
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-black/20 rounded-xl border ${state.adminForm.id === m.id ? 'border-amber-500/50 bg-amber-900/10' : 'border-white/5'} hover:bg-black/40 transition-colors gap-4">
+                                    <div class="w-full sm:w-auto">
+                                        <h4 class="text-sm font-bold text-slate-200">${m.topic || m.subject}</h4>
+                                        <p class="text-xs text-slate-500">${m.subject}</p>
+                                        <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                            <span class="text-[10px] bg-white/5 px-2 py-0.5 rounded text-slate-400 border border-white/5">${m.category}</span>
+                                            <span class="text-[10px] text-slate-500">${m.year}</span>
+                                        </div>
                                     </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="handleEdit('${m.id}')" class="p-2 rounded-lg bg-slate-700/30 text-slate-400 hover:text-white"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-                                        <button onclick="handleDelete('${m.id}')" class="p-2 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    <div class="flex gap-2 w-full sm:w-auto justify-end">
+                                        <button onclick="handleEdit('${m.id}')" class="p-2.5 rounded-lg border bg-slate-700/30 text-slate-400 border-slate-700/50 hover:text-white"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                        <button onclick="handleDelete('${m.id}')" class="p-2.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:text-rose-200"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                     </div>
                                 </div>
                             `).join('')}
@@ -492,56 +629,128 @@
         }
 
         function renderHome() {
-            const filtered = state.materials.filter(m => {
+            const yearSemFiltered = state.materials.filter(m => {
                 const y = state.filterYear === 'All' || m.year === state.filterYear;
                 const s = state.filterSem === 'All' || m.semester === state.filterSem;
-                const q = state.searchSub.toLowerCase();
-                return y && s && (m.subject.toLowerCase().includes(q) || m.teacher.toLowerCase().includes(q));
+                return y && s;
+            });
+
+            // Extract unique subjects - ensure fallback if subject is undefined
+            const availableSubjects = [...new Set(yearSemFiltered.map(m => m.subject || ''))].filter(Boolean).sort();
+
+            const finalFiltered = yearSemFiltered.filter(m => {
+                return state.filterSubject === 'All' || m.subject === state.filterSubject;
             });
 
             return `
                 <div class="space-y-8 animate-fadeIn">
-                    <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-xl sticky top-4 z-30">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <select onchange="setFilter('filterYear', this.value)" class="col-span-1 bg-black/30 text-slate-200 h-10 px-3 rounded-xl text-xs outline-none border border-white/5">
-                                <option value="All" class="bg-slate-900">All Years</option>
-                                ${YEARS.map(y => `<option value="${y}" class="bg-slate-900" ${state.filterYear === y ? 'selected':''}>${y}</option>`).join('')}
-                            </select>
-                            <select onchange="setFilter('filterSem', this.value)" class="col-span-1 bg-black/30 text-slate-200 h-10 px-3 rounded-xl text-xs outline-none border border-white/5">
-                                <option value="All" class="bg-slate-900">All Semesters</option>
-                                ${SEMESTERS.map(s => `<option value="${s}" class="bg-slate-900" ${state.filterSem === s ? 'selected':''}>${s}</option>`).join('')}
-                            </select>
-                            <input oninput="setFilter('searchSub', this.value)" class="col-span-2 md:col-span-2 bg-black/30 text-slate-200 h-10 px-4 rounded-xl text-xs outline-none border border-white/5" placeholder="Search subject..." />
+                    <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-4 md:p-6 rounded-3xl shadow-xl sticky top-4 z-30">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">YEAR</label>
+                                <div class="relative">
+                                    <select onchange="setFilter('filterYear', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none appearance-none cursor-pointer hover:border-cyan-500/30 transition-colors">
+                                        ${YEARS.map(y => `<option value="${y}" class="bg-black" ${state.filterYear === y ? 'selected' : ''}>${y}</option>`).join('')}
+                                    </select>
+                                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEMESTER</label>
+                                <div class="relative">
+                                    <select onchange="setFilter('filterSem', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none appearance-none cursor-pointer hover:border-cyan-500/30 transition-colors">
+                                        ${SEMESTERS.map(s => `<option value="${s}" class="bg-black" ${state.filterSem === s ? 'selected' : ''}>${s}</option>`).join('')}
+                                    </select>
+                                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SUBJECT</label>
+                                <div class="relative">
+                                    <select onchange="setFilter('filterSubject', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none appearance-none cursor-pointer hover:border-cyan-500/30 transition-colors" ${availableSubjects.length === 0 ? 'disabled' : ''}>
+                                        <option value="All" class="bg-black">All Subjects</option>
+                                        ${availableSubjects.map(sub => `<option value="${sub}" class="bg-black" ${state.filterSubject === sub ? 'selected' : ''}>${sub}</option>`).join('')}
+                                    </select>
+                                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    ${state.loading ? `<div class="text-center py-20 opacity-50 text-sm tracking-widest text-cyan-400 animate-pulse">SYNCING WITH REPO...</div>` :
-                      filtered.length === 0 ? `<div class="text-center py-20 opacity-50 text-slate-500">No materials found.</div>` :
-                      `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          ${filtered.map(m => `
-                            <div class="bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-cyan-500/30 transition-all group relative overflow-hidden">
-                                <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-cyan-500 to-purple-600 opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                                <div class="flex justify-between items-start mb-3 pl-2">
-                                    <span class="text-[10px] font-bold bg-white/5 px-2 py-1 rounded text-cyan-300 border border-white/10">${m.category}</span>
-                                    <span class="text-[10px] text-slate-500">${m.part}</span>
-                                </div>
-                                <h3 class="font-bold text-white text-lg leading-tight mb-1 pl-2">${m.subject}</h3>
-                                <p class="text-xs text-slate-400 pl-2 mb-4 flex items-center gap-2"><i data-lucide="user" class="w-3 h-3"></i> ${m.teacher}</p>
-                                
-                                <div class="flex gap-2 pl-2 mt-4 pt-4 border-t border-white/5">
-                                    <a href="${m.link}" target="_blank" class="flex-1 bg-cyan-500/10 text-cyan-300 text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-cyan-500/20 transition-colors">
-                                        <i data-lucide="${m.isFile ? 'file-down' : 'external-link'}" class="w-3 h-3"></i> ${m.isFile ? 'DOWNLOAD' : 'LINK'}
-                                    </a>
-                                </div>
+                    ${state.loading ? `
+                        <div class="flex flex-col items-center justify-center py-32 opacity-70">
+                            <div class="relative">
+                                <div class="w-20 h-20 bg-cyan-500/20 rounded-full animate-ping absolute top-0 left-0"></div>
+                                <div class="w-20 h-20 bg-white/5 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center relative z-10"><i data-lucide="activity" class="w-8 h-8 text-cyan-400 animate-pulse"></i></div>
                             </div>
-                          `).join('')}
-                      </div>`
-                    }
+                            <p class="mt-6 text-sm font-medium tracking-widest text-cyan-200/70">LOADING ASSETS...</p>
+                        </div>
+                    ` : finalFiltered.length === 0 ? `
+                        <div class="flex flex-col items-center justify-center py-32 bg-white/5 border border-white/5 rounded-3xl border-dashed">
+                            <i data-lucide="database" class="w-16 h-16 text-slate-600 mb-4 opacity-50"></i>
+                            <p class="text-slate-500 font-medium">No materials found for ${state.filterYear}, ${state.filterSem}</p>
+                        </div>
+                    ` : `
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${finalFiltered.map(m => renderCard(m)).join('')}
+                        </div>
+                    `}
                 </div>
             `;
         }
 
-        // Init
+        function renderCard(data) {
+            const isFile = !!data.fileData;
+            const safeData = isFile ? encodeURIComponent(data.fileData) : '';
+            const safeName = isFile ? encodeURIComponent(data.fileName || 'download') : '';
+            const displayTitle = data.topic || data.subject;
+            const displaySubtitle = data.topic ? data.subject : ''; 
+
+            return `
+                <div class="group relative flex flex-col bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:border-white/20 transition-all duration-500 hover:-translate-y-1">
+                    <div class="h-1 w-full opacity-70 group-hover:opacity-100 transition-opacity ${isFile ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500' : 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500'}"></div>
+                    
+                    <div class="p-6 flex-1">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[10px] font-bold text-cyan-300 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20 uppercase tracking-wide">${data.category}</span>
+                            ${state.isAdmin ? `<button onclick="handleDelete('${data.id}')" class="p-1.5 rounded-lg text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/20 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+                        </div>
+                        
+                        <h3 class="text-lg font-bold text-white mb-1 group-hover:text-cyan-200 transition-colors line-clamp-1">${displayTitle}</h3>
+                        ${displaySubtitle ? `<p class="text-xs text-slate-400 mb-2 font-medium">${displaySubtitle}</p>` : ''}
+                        
+                        <div class="flex items-center gap-2 mb-6 mt-3">
+                            <div class="w-6 h-6 rounded-full bg-slate-700/50 flex items-center justify-center border border-white/10"><i data-lucide="user" class="w-3 h-3 text-slate-300"></i></div>
+                            <span class="text-sm text-slate-400 font-medium">${data.teacher}</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-black/20 rounded-xl p-2.5 border border-white/5">
+                                <span class="block text-slate-500 font-bold text-[9px] uppercase mb-0.5">Semester</span>
+                                <span class="text-xs text-slate-300 font-medium">${data.year} • ${data.semester.split(' ')[0]}</span>
+                            </div>
+                            <div class="bg-black/20 rounded-xl p-2.5 border border-white/5">
+                                <span class="block text-slate-500 font-bold text-[9px] uppercase mb-0.5">Segment</span>
+                                <span class="text-xs text-slate-300 font-medium">${data.part}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex border-t border-white/10 divide-x divide-white/10 bg-black/10">
+                        ${isFile 
+                            ? `<button onclick="handleDownload(decodeURIComponent('${safeData}'), decodeURIComponent('${safeName}'))" class="flex-1 p-4 flex items-center justify-center gap-2 text-sm font-medium text-purple-300 hover:bg-purple-500/10 transition-colors">
+                                <i data-lucide="database" class="w-4 h-4"></i> Retrieve
+                               </button>`
+                            : `<a href="${data.link}" target="_blank" class="flex-1 p-4 flex items-center justify-center gap-2 text-sm font-medium text-cyan-300 hover:bg-cyan-500/10 transition-colors">
+                                <i data-lucide="download" class="w-4 h-4"></i> Download
+                               </a>`
+                        }
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initial Render
         init();
         render();
     </script>
