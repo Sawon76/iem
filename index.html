@@ -512,6 +512,9 @@
 
         function renderAdmin() {
             const f = state.adminForm;
+            // Calculate unique subjects from existing materials to populate the dropdown
+            const uniqueSubjects = [...new Set(state.materials.map(m => m.subject).filter(Boolean))].sort();
+
             return `
                 <div class="max-w-3xl mx-auto space-y-8 animate-fadeIn">
                     <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl">
@@ -541,19 +544,22 @@
                                     ${SEMESTERS.map(s => `<option value="${s}" class="bg-slate-900" ${f.semester === s ? 'selected' : ''}>${s}</option>`).join('')}
                                 </select>
                             </div>
+                            
+                            <!-- Modified Subject Input with Datalist -->
                             <div class="col-span-1 md:col-span-2 space-y-2">
                                 <label class="text-xs font-bold text-slate-300 ml-1">SUBJECT NAME</label>
-                                <!-- FIX: Added ', false' to prevent re-render on input -->
-                                <input value="${f.subject}" oninput="updateAdminForm('subject', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Advanced Robotics" required />
+                                <input list="subject-options" value="${f.subject}" oninput="updateAdminForm('subject', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="Select existing or type new subject..." required />
+                                <datalist id="subject-options">
+                                    ${uniqueSubjects.map(s => `<option value="${s}">`).join('')}
+                                </datalist>
                             </div>
+
                             <div class="col-span-1 md:col-span-2 space-y-2">
                                 <label class="text-xs font-bold text-slate-300 ml-1">TOPIC NAME</label>
-                                <!-- FIX: Added ', false' to prevent re-render on input -->
                                 <input value="${f.topic}" oninput="updateAdminForm('topic', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Kinematics" required />
                             </div>
                             <div class="col-span-1 md:col-span-2 space-y-2">
                                 <label class="text-xs font-bold text-slate-300 ml-1">INSTRUCTOR</label>
-                                <!-- FIX: Added ', false' to prevent re-render on input -->
                                 <input value="${f.teacher}" oninput="updateAdminForm('teacher', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Dr. A. Smith" required />
                             </div>
                             <div class="space-y-2">
