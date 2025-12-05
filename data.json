@@ -24,5 +24,18 @@
     "link": "https://drive.google.com/file/d/1P-Y9uQh5zDlJxVbwgXV1Pj0hxrKUTmtZ/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-04T18:07:59.145Z"
+  },
+  {
+    "id": "e95ad936-7c79-4391-a39f-2f39e7c9f8b5",
+    "year": "1st Year",
+    "semester": "1st Semester",
+    "subject": "Engineering Metallurgy",
+    "topic": "Narang book",
+    "teacher": "Nazma Mam",
+    "category": "Study Material",
+    "part": "Part A",
+    "link": "https://drive.google.com/file/d/17vQoEeM3Yy27Szl73wAVpPOGCUlqo94C/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-05T04:20:31.501Z"
   }
 ]
