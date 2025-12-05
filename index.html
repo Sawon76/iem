@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IEM'21 KUET - Industrial Study Hub</title>
+    <title>KUET IEM Study Hub</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -71,18 +71,25 @@
             let mouseY = -1000;
 
             function resize() {
+                // Resize canvas to match its large container
                 const rect = canvas.parentElement.getBoundingClientRect();
                 width = rect.width;
                 height = rect.height;
+                
+                // Set actual canvas size
                 canvas.width = width;
                 canvas.height = height;
+                
                 draw();
             }
 
+            // Track mouse on window because the canvas is pointer-events-none and skewed
             window.addEventListener('mousemove', (e) => {
                 const rect = canvas.parentElement.getBoundingClientRect();
                 mouseX = e.clientX - rect.left;
                 mouseY = e.clientY - rect.top;
+                
+                // Adjust for skew
                 const skewRad = 12 * (Math.PI / 180);
                 const skewOffset = (e.clientX - (window.innerWidth / 2)) * Math.tan(skewRad);
                 mouseY = (e.clientY - rect.top) - skewOffset;
@@ -90,9 +97,11 @@
 
             function draw() {
                 ctx.clearRect(0, 0, width, height);
+                
                 const cols = Math.ceil(width / squareSize);
                 const rows = Math.ceil(height / squareSize);
                 
+                // Draw Grid Lines
                 ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -107,19 +116,23 @@
                 }
                 ctx.stroke();
 
+                // Draw Hover Effect
                 if (mouseX > 0 && mouseY > 0) {
                     const hoverCol = Math.floor(mouseX / squareSize);
                     const hoverRow = Math.floor(mouseY / squareSize);
                     
+                    // Draw the highlighted square
                     ctx.fillStyle = "rgba(100, 150, 255, 0.2)";
                     ctx.fillRect(hoverCol * squareSize + 1, hoverRow * squareSize + 1, squareSize - 2, squareSize - 2);
 
+                    // Draw neighbors
                     ctx.fillStyle = "rgba(100, 150, 255, 0.05)";
                     ctx.fillRect(hoverCol * squareSize + 1, (hoverRow - 1) * squareSize + 1, squareSize - 2, squareSize - 2);
                     ctx.fillRect(hoverCol * squareSize + 1, (hoverRow + 1) * squareSize + 1, squareSize - 2, squareSize - 2);
                     ctx.fillRect((hoverCol - 1) * squareSize + 1, hoverRow * squareSize + 1, squareSize - 2, squareSize - 2);
                     ctx.fillRect((hoverCol + 1) * squareSize + 1, hoverRow * squareSize + 1, squareSize - 2, squareSize - 2);
                 }
+
                 requestAnimationFrame(draw);
             }
 
@@ -154,8 +167,8 @@
             view: 'home',
             materials: [],
             loading: true,
-            filterYear: YEARS[0],
-            filterSem: SEMESTERS[0],
+            filterYear: 'All', // Default changed to 'All'
+            filterSem: 'All',  // Default changed to 'All'
             filterSubject: 'All', 
             searchSub: '',
             neuralTarget: null,
@@ -282,7 +295,7 @@
             render(); 
         };
         
-        // FIX: Modified to accept an optional 'shouldRender' parameter
+        // Prevents re-render on each keystroke for admin inputs
         window.updateAdminForm = (k, v, shouldRender = true) => { 
             state.adminForm[k] = v; 
             if (shouldRender) render(); 
@@ -419,6 +432,18 @@
         function render() {
             const root = document.getElementById('root');
             
+            // 1. Capture Focus State before re-rendering
+            let focusedId = null;
+            let selectionStart = 0;
+            let selectionEnd = 0;
+            if (document.activeElement && document.activeElement.id) {
+                focusedId = document.activeElement.id;
+                if (document.activeElement.type === 'text' || document.activeElement.type === 'search' || document.activeElement.tagName === 'INPUT') {
+                    selectionStart = document.activeElement.selectionStart;
+                    selectionEnd = document.activeElement.selectionEnd;
+                }
+            }
+
             if (GITHUB_CONFIG.owner === "YOUR_GITHUB_USERNAME") {
                 root.innerHTML = renderSetup();
                 lucide.createIcons();
@@ -434,11 +459,23 @@
             const footer = `
                 <footer class="relative z-10 mt-12 py-8 text-center text-slate-500 text-xs">
                     <div class="inline-block px-4 py-2 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm">
-                        Made by SAWON M. • GitHub Powered
+                        Made by SAWON MUKHERJEE
                     </div>
                 </footer>`;
 
             root.innerHTML = nav + `<main class="relative z-10 max-w-7xl mx-auto px-4 py-8 min-h-[80vh]">${content}</main>` + footer;
+            
+            // 2. Restore Focus State after re-rendering
+            if (focusedId) {
+                const el = document.getElementById(focusedId);
+                if (el) {
+                    el.focus();
+                    if (typeof el.setSelectionRange === 'function') {
+                        el.setSelectionRange(selectionStart, selectionEnd);
+                    }
+                }
+            }
+
             lucide.createIcons();
         }
 
@@ -467,13 +504,13 @@
                     <div class="max-w-7xl mx-auto px-6">
                         <div class="flex flex-col md:flex-row items-center justify-between min-h-[5rem] py-4 md:py-0 gap-4">
                             <div class="flex items-center gap-3 cursor-pointer" onclick="setView('home')">
-                                <img src="iem.png" alt="KUET Logo" class="h-12 w-auto object-contain" />
+                                <img src="iem.png" alt="IEM Logo" class="h-12 w-auto object-contain" />
                                 <span class="text-xl font-bold text-slate-200">KUET IEM'21</span>
                             </div>
                             <div class="flex items-center gap-4">
                                 <div class="hidden md:flex items-center gap-2 text-xs font-medium text-slate-400 bg-black/20 px-3 py-1 rounded-full border border-white/5">
-                                    <div class="w-2 h-2 rounded-full ${state.user ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-rose-400'}"></div>
-                                    ${state.user ? 'ADMIN ONLINE' : 'PUBLIC MODE'}
+                                    <div class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] ${state.user ? 'animate-pulse' : ''}"></div>
+                                    ${state.user ? 'ADMIN ONLINE' : 'ONLINE'}
                                 </div>
                                 ${state.isAdmin 
                                     ? `<button onclick="handleLogout()" class="px-4 py-2 text-xs font-bold text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-xl hover:bg-rose-500/20">LOGOUT</button>`
@@ -649,21 +686,27 @@
                 return y && s;
             });
 
-            // Extract unique subjects - ensure fallback if subject is undefined
             const availableSubjects = [...new Set(yearSemFiltered.map(m => m.subject || ''))].filter(Boolean).sort();
 
             const finalFiltered = yearSemFiltered.filter(m => {
-                return state.filterSubject === 'All' || m.subject === state.filterSubject;
+                const subMatch = state.filterSubject === 'All' || m.subject === state.filterSubject;
+                const q = state.searchSub.toLowerCase();
+                const searchMatch = !q || 
+                                    (m.subject && m.subject.toLowerCase().includes(q)) || 
+                                    (m.topic && m.topic.toLowerCase().includes(q)) || 
+                                    (m.teacher && m.teacher.toLowerCase().includes(q));
+                return subMatch && searchMatch;
             });
 
             return `
                 <div class="space-y-8 animate-fadeIn">
-                    <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-4 md:p-6 rounded-3xl shadow-xl sticky top-4 z-30">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-4 md:p-6 rounded-3xl shadow-xl relative z-30">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">YEAR</label>
                                 <div class="relative">
                                     <select onchange="setFilter('filterYear', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none appearance-none cursor-pointer hover:border-cyan-500/30 transition-colors">
+                                        <option value="All" class="bg-black">All Years</option>
                                         ${YEARS.map(y => `<option value="${y}" class="bg-black" ${state.filterYear === y ? 'selected' : ''}>${y}</option>`).join('')}
                                     </select>
                                     <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
@@ -673,6 +716,7 @@
                                 <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEMESTER</label>
                                 <div class="relative">
                                     <select onchange="setFilter('filterSem', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none appearance-none cursor-pointer hover:border-cyan-500/30 transition-colors">
+                                        <option value="All" class="bg-black">All Semesters</option>
                                         ${SEMESTERS.map(s => `<option value="${s}" class="bg-black" ${state.filterSem === s ? 'selected' : ''}>${s}</option>`).join('')}
                                     </select>
                                     <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
@@ -686,6 +730,13 @@
                                         ${availableSubjects.map(sub => `<option value="${sub}" class="bg-black" ${state.filterSubject === sub ? 'selected' : ''}>${sub}</option>`).join('')}
                                     </select>
                                     <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEARCH</label>
+                                <div class="relative">
+                                    <input id="search-input" oninput="setFilter('searchSub', this.value)" value="${state.searchSub}" class="w-full bg-black border border-white/10 text-slate-200 h-12 pl-10 pr-4 rounded-full text-sm outline-none placeholder-slate-600 focus:border-cyan-500/30 transition-colors" placeholder="Topic, Subject, Teacher..." />
+                                    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
                                 </div>
                             </div>
                         </div>
