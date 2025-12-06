@@ -232,5 +232,18 @@
     "link": "https://drive.google.com/file/d/164wvSM0l6fnaEIpri8cOmzNJeUjE46fw/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-06T17:19:10.889Z"
+  },
+  {
+    "id": "96771760-9d1e-4779-bd1a-acb9d395fe94",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Fluid Mechanics",
+    "topic": "Turbine",
+    "teacher": "Karmakar Sir",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://drive.google.com/file/d/1BRJuOHOGVOIYWpkNRV1obtPdCXxUG1vE/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-06T17:19:31.722Z"
   }
 ]
