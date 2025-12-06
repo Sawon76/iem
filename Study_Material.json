@@ -375,5 +375,18 @@
     "link": "https://drive.google.com/file/d/1j-R474aMB53FQZBJgFwXiqjPzGlW6-Wh/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-06T17:26:19.450Z"
+  },
+  {
+    "id": "ec4607c9-6956-4228-b523-1e241e87508d",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Fluid Mechanics",
+    "topic": "a-textbook-of-fluid-mechanics-amp-hydraulic-machines-by-r-k-rajput-pdf",
+    "teacher": "Both",
+    "category": "Study Material",
+    "part": "Part A",
+    "link": "https://drive.google.com/file/d/1UVFLsyI3UK5REvcb6rsvWhj1KzmnAkpG/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-06T17:27:13.790Z"
   }
 ]
