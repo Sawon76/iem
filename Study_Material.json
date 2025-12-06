@@ -193,5 +193,18 @@
     "link": "https://drive.google.com/file/d/1BHNCjHtElnW6lpJiELU-WP326lb92UIY/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-06T17:11:25.179Z"
+  },
+  {
+    "id": "926b03fa-1302-4b24-a352-8240e437e153",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Fluid Mechanics",
+    "topic": "Centrifugal Pump",
+    "teacher": "Karmakar Sir",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://drive.google.com/file/d/1ky_D1GCTTbNEK6RtUw-xhesPpxcKiCak/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-06T17:18:21.628Z"
   }
 ]
