@@ -323,5 +323,18 @@
     "link": "https://drive.google.com/file/d/1bE9_vkiGlKklhjbwpBfhrcQC8yVVp5A5/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-06T17:22:33.604Z"
+  },
+  {
+    "id": "fbb41b16-398c-4dba-99c4-da00b38773f3",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Fluid Mechanics",
+    "topic": "7 Buoyancy and Stability",
+    "teacher": "Billah Sir",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://docs.google.com/presentation/d/13tPxa9OcuzoMDbXIA5XcRMHroIZ7k_bh/edit?usp=drive_link&ouid=102371481803203976363&rtpof=true&sd=true",
+    "isFile": false,
+    "createdAt": "2025-12-06T17:22:50.953Z"
   }
 ]
