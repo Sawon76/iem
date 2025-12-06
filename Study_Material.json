@@ -102,5 +102,18 @@
     "link": "https://drive.google.com/file/d/15otXvZUhsYlbHE5Spmgx15CtN5_vPAUR/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-06T17:01:23.125Z"
+  },
+  {
+    "id": "d5f6f04b-7c6d-4d48-a868-cfecf8face78",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Engineering Metallurgy",
+    "topic": "7. Metal_Identification",
+    "teacher": "Rafiq Sir",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://drive.google.com/file/d/1QgkZdFDDDS6aGOUkVElPmUcuxeVu7AOe/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-06T17:01:42.536Z"
   }
 ]
