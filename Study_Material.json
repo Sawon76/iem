@@ -349,5 +349,18 @@
     "link": "https://drive.google.com/file/d/1b8kCF69DnxWKcN8cpunU5WsjTMvI_wZ-/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-06T17:23:07.877Z"
+  },
+  {
+    "id": "1e4ca592-56b7-435c-a123-92b78600b842",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Fluid Mechanics",
+    "topic": "11 Fluid Dynamics",
+    "teacher": "Billah Sir",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://docs.google.com/presentation/d/1Wj0ozFJ00UlbBvv8apnjf--o3R65y4sW/edit?usp=drive_link&ouid=102371481803203976363&rtpof=true&sd=true",
+    "isFile": false,
+    "createdAt": "2025-12-06T17:23:28.893Z"
   }
 ]
