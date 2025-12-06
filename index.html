@@ -133,7 +133,7 @@
         // --- GITHUB CONFIGURATION ---
         const GITHUB_CONFIG = {
             owner: "Sawon76", 
-            repo: "data-iem",        
+            repo: "iem",        
             branch: "main"
             // dbPath removed: we now dynamically generate filenames based on category
         };
@@ -236,7 +236,6 @@
                                 const file = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${fileName}`);
                                 const content = atob(file.content);
                                 const data = JSON.parse(content);
-                                // Ensure category field is consistent with filename source
                                 return data.map(item => ({ ...item, category })); 
                             } catch (e) {
                                 if (e.message.includes('404')) return [];
@@ -244,9 +243,12 @@
                             }
                         } else {
                             // Public: Fetch Raw
+                            // FIX: Added cache: 'no-store' to force fresh data from GitHub
                             const cacheBuster = new Date().getTime();
                             const url = `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${fileName}?t=${cacheBuster}`;
-                            const res = await fetch(url);
+                            
+                            const res = await fetch(url, { cache: "no-store" });
+                            
                             if (res.ok) {
                                 const data = await res.json();
                                 return data.map(item => ({ ...item, category }));
@@ -847,6 +849,7 @@
                         <div class="flex flex-col items-center justify-center py-32 bg-white/5 border border-white/5 rounded-3xl border-dashed">
                             <i data-lucide="database" class="w-16 h-16 text-slate-600 mb-4 opacity-50"></i>
                             <p class="text-slate-500 font-medium">No materials found.</p>
+                            ${!state.user ? '<p class="text-xs text-slate-600 mt-2">(If you are Admin, check if Repository is Public)</p>' : ''}
                         </div>
                     ` : `
                         <div class="space-y-12">
