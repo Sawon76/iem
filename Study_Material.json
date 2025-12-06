@@ -388,5 +388,18 @@
     "link": "https://drive.google.com/file/d/1UVFLsyI3UK5REvcb6rsvWhj1KzmnAkpG/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-06T17:27:13.790Z"
+  },
+  {
+    "id": "2af15faf-40a9-4902-ae7b-a974d9182dd6",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Fluid Mechanics",
+    "topic": "A-Textbook-of-Fluid-Mechanics-and-Hydraulic-Machines-by-Dr.-R.K.-Bansal-9th-Edition",
+    "teacher": "Both",
+    "category": "Study Material",
+    "part": "Part A",
+    "link": "https://drive.google.com/file/d/1gCR1_yKRRCmoaT7uqFt6rtl-giRJEtCE/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-06T17:27:36.337Z"
   }
 ]
