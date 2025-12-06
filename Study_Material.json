@@ -206,5 +206,18 @@
     "link": "https://drive.google.com/file/d/1ky_D1GCTTbNEK6RtUw-xhesPpxcKiCak/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-06T17:18:21.628Z"
+  },
+  {
+    "id": "b1b9c7c7-9c14-4968-83f3-aec7ce986d80",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Fluid Mechanics",
+    "topic": "Flow Measurement",
+    "teacher": "Karmakar Sir",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://drive.google.com/file/d/19zoLxeacrus8f6QKcjoTjlpP2qkYIU8u/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-06T17:18:49.397Z"
   }
 ]
