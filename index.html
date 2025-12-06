@@ -158,6 +158,7 @@
             filterYear: 'All', 
             filterSem: 'All',  
             filterSubject: 'All', 
+            filterCategory: 'All', // Added Category Filter state
             searchSub: '',
             neuralTarget: null,
             
@@ -773,12 +774,15 @@
 
             const finalFiltered = yearSemFiltered.filter(m => {
                 const subMatch = state.filterSubject === 'All' || m.subject === state.filterSubject;
+                // Added Category Matching Logic
+                const catMatch = state.filterCategory === 'All' || m.category === state.filterCategory;
+                
                 const q = state.searchSub.toLowerCase();
                 const searchMatch = !q || 
                                     (m.subject && m.subject.toLowerCase().includes(q)) || 
                                     (m.topic && m.topic.toLowerCase().includes(q)) || 
                                     (m.teacher && m.teacher.toLowerCase().includes(q));
-                return subMatch && searchMatch;
+                return subMatch && catMatch && searchMatch;
             });
 
             // Group materials by Subject
@@ -795,7 +799,7 @@
                 <div class="space-y-8 animate-fadeIn">
                     <!-- Filter Bar -->
                     <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-4 md:p-6 rounded-3xl shadow-xl relative z-30">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">YEAR</label>
                                 <div class="relative">
@@ -826,6 +830,19 @@
                                     <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
                                 </div>
                             </div>
+                            
+                            <!-- Added Category Filter (Includes Books) -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">CATEGORY</label>
+                                <div class="relative">
+                                    <select onchange="setFilter('filterCategory', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none appearance-none cursor-pointer hover:border-cyan-500/30 transition-colors">
+                                        <option value="All" class="bg-black">All Categories</option>
+                                        ${CATEGORIES.map(c => `<option value="${c}" class="bg-black" ${state.filterCategory === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                    </select>
+                                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
+                                </div>
+                            </div>
+
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEARCH</label>
                                 <div class="relative">
