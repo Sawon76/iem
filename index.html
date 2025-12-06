@@ -133,9 +133,9 @@
         // --- GITHUB CONFIGURATION ---
         const GITHUB_CONFIG = {
             owner: "Sawon76", 
-            repo: "iem",        
-            branch: "main",
-            dbPath: "data.json"
+            repo: "data-iem",        
+            branch: "main"
+            // dbPath removed: we now dynamically generate filenames based on category
         };
 
         const apiKey = ""; // Gemini API Key (Runtime provided)
@@ -143,7 +143,8 @@
         // --- Constants ---
         const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
         const SEMESTERS = ['1st Semester', '2nd Semester'];
-        const CATEGORIES = ['Study Material', 'Term Questions', 'CT Questions', 'Lab Manual'];
+        // Added 'Books' to the categories list
+        const CATEGORIES = ['Study Material', 'Term Questions', 'CT Questions', 'Lab Manual', 'Books'];
         const PARTS = ['Part A', 'Part B', 'Complete'];
 
         // --- State ---
@@ -224,25 +225,43 @@
             render();
             
             try {
-                if (state.token) {
+                // Fetch each category file in parallel
+                const promises = CATEGORIES.map(async (category) => {
+                    const fileName = category.replace(/\s+/g, '_') + '.json';
+                    
                     try {
-                        const file = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dbPath}`);
-                        const content = atob(file.content);
-                        state.materials = JSON.parse(content);
-                    } catch (e) {
-                        if (e.message.includes('404')) state.materials = [];
-                        else throw e;
+                        if (state.token) {
+                            // Admin: Fetch via API
+                            try {
+                                const file = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${fileName}`);
+                                const content = atob(file.content);
+                                const data = JSON.parse(content);
+                                // Ensure category field is consistent with filename source
+                                return data.map(item => ({ ...item, category })); 
+                            } catch (e) {
+                                if (e.message.includes('404')) return [];
+                                throw e;
+                            }
+                        } else {
+                            // Public: Fetch Raw
+                            const cacheBuster = new Date().getTime();
+                            const url = `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${fileName}?t=${cacheBuster}`;
+                            const res = await fetch(url);
+                            if (res.ok) {
+                                const data = await res.json();
+                                return data.map(item => ({ ...item, category }));
+                            }
+                            return [];
+                        }
+                    } catch (err) {
+                        console.error(`Failed to fetch ${category}:`, err);
+                        return [];
                     }
-                } else {
-                    const cacheBuster = new Date().getTime();
-                    const url = `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${GITHUB_CONFIG.dbPath}?t=${cacheBuster}`;
-                    const res = await fetch(url);
-                    if (res.ok) {
-                        state.materials = await res.json();
-                    } else {
-                        state.materials = [];
-                    }
-                }
+                });
+
+                const results = await Promise.all(promises);
+                state.materials = results.flat();
+
             } catch (err) {
                 console.error("Fetch failed:", err);
             } finally {
@@ -251,17 +270,23 @@
             }
         }
 
-        async function saveToGitHub(newMaterials) {
+        async function saveCategoryFile(category) {
+            const fileName = category.replace(/\s+/g, '_') + '.json';
+            
+            // Filter materials belonging to this specific category
+            const categoryMaterials = state.materials.filter(m => m.category === category);
+
+            // Get SHA if updating
             let sha = null;
             try {
-                const current = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dbPath}`);
+                const current = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${fileName}`);
                 sha = current.sha;
             } catch (e) {}
 
-            const content = btoa(JSON.stringify(newMaterials, null, 2));
+            const content = btoa(JSON.stringify(categoryMaterials, null, 2));
             
-            await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dbPath}`, 'PUT', {
-                message: "Update study materials DB",
+            await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${fileName}`, 'PUT', {
+                message: `Update ${category}`,
                 content: content,
                 sha: sha
             });
@@ -372,17 +397,32 @@
                     createdAt: new Date().toISOString()
                 };
 
+                // Track category change for editing
+                let oldCategory = null;
                 let newMaterials = [...state.materials];
+
                 if (form.id) {
                     const idx = newMaterials.findIndex(m => m.id === form.id);
-                    if (idx !== -1) newMaterials[idx] = newItem;
+                    if (idx !== -1) {
+                        oldCategory = newMaterials[idx].category;
+                        newMaterials[idx] = newItem;
+                    }
                 } else {
                     newMaterials.push(newItem);
                 }
 
-                await saveToGitHub(newMaterials);
-                
+                // Update local state immediately
                 state.materials = newMaterials;
+
+                // Save to GitHub
+                // 1. Save the new category file
+                await saveCategoryFile(newItem.category);
+                
+                // 2. If editing and category changed, update old category file too
+                if (oldCategory && oldCategory !== newItem.category) {
+                    await saveCategoryFile(oldCategory);
+                }
+                
                 state.adminForm.status = 'SUCCESS';
                 render();
                 setTimeout(() => { resetAdminForm(); render(); }, 1500);
@@ -398,9 +438,15 @@
         window.handleDelete = async (id) => {
             if(!confirm("Permanently delete this entry?")) return;
             try {
+                const item = state.materials.find(m => m.id === id);
+                if (!item) return;
+
+                const category = item.category;
                 const newMaterials = state.materials.filter(m => m.id !== id);
-                await saveToGitHub(newMaterials);
                 state.materials = newMaterials;
+                
+                await saveCategoryFile(category);
+                
                 render();
             } catch (err) { alert("Delete Failed: " + err.message); }
         };
