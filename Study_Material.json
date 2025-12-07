@@ -492,5 +492,18 @@
     "link": "https://drive.google.com/file/d/14mnk_MucY3wlZJK48-3HR-fVKB4NhTnH/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-07T03:42:42.978Z"
+  },
+  {
+    "id": "7b8439db-1a46-4538-b5f3-78146aa1aa67",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Product Design - 1",
+    "topic": "concurrent engineering",
+    "teacher": "Nazma Mam",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://drive.google.com/file/d/1aWxDUvDhpX5ga3hzOxNXy3ABQ1qc_-X0/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-07T03:43:05.122Z"
   }
 ]
