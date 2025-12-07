@@ -518,5 +518,18 @@
     "link": "https://drive.google.com/file/d/1QIHmWwdNLAugIY32-pjg2kWqOChvz0fP/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-07T03:43:22.167Z"
+  },
+  {
+    "id": "b4c5a1f6-2e40-48bf-9abe-81ebe3ea67ea",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Product Design - 1",
+    "topic": "Value engineering",
+    "teacher": "Nazma Mam",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://drive.google.com/file/d/1kX7ibZlcXHhjmQNokC3SyjaVGF1R2-kn/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-07T03:43:39.979Z"
   }
 ]
