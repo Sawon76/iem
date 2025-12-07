@@ -453,5 +453,18 @@
     "link": "https://drive.google.com/file/d/1ccJvplFy-YDRnxLcupNG9qWAL17CYwfS/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-07T03:13:03.700Z"
+  },
+  {
+    "id": "1711e1c3-4e7b-47f8-bf49-3a268900cd75",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Product Design - 1",
+    "topic": "Ch-9 Product architecture",
+    "teacher": "Nazma Mam",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://drive.google.com/file/d/1wd80wkBkojJl0_P5jWSJdHsrpGoKzk3Q/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-07T03:42:02.213Z"
   }
 ]
