@@ -505,5 +505,18 @@
     "link": "https://drive.google.com/file/d/1aWxDUvDhpX5ga3hzOxNXy3ABQ1qc_-X0/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-07T03:43:05.122Z"
+  },
+  {
+    "id": "043c5f55-b570-4617-a50b-f97707c67dfd",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Product Design - 1",
+    "topic": "kano model",
+    "teacher": "Nazma Mam",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://drive.google.com/file/d/1QIHmWwdNLAugIY32-pjg2kWqOChvz0fP/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-07T03:43:22.167Z"
   }
 ]
