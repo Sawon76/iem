@@ -145,7 +145,7 @@
         const SEMESTERS = ['1st Semester', '2nd Semester'];
         // Added 'Books' to the categories list
         const CATEGORIES = ['Study Material', 'Term Questions', 'CT Questions', 'Lab Manual', 'Books'];
-        const PARTS = ['Part A', 'Part B', 'Complete'];
+        const PARTS = ['Part A', 'Part B', 'Both']; // Changed 'Complete' to 'Both'
 
         // --- State ---
         const state = {
@@ -323,6 +323,15 @@
         window.updateAdminForm = (k, v, shouldRender = true) => { 
             state.adminForm[k] = v; 
             if (shouldRender) render(); 
+        };
+
+        // NEW: Specific handler for category changes to auto-set 'Both' for Books
+        window.handleCategoryChange = (value) => {
+            state.adminForm.category = value;
+            if (value === 'Books') {
+                state.adminForm.part = 'Both'; // Changed 'Complete' to 'Both'
+            }
+            render();
         };
 
         // Toggle lock state for a field
@@ -571,7 +580,7 @@
                     <div class="max-w-7xl mx-auto px-6">
                         <div class="flex flex-col md:flex-row items-center justify-between min-h-[5rem] py-4 md:py-0 gap-4">
                             <div class="flex items-center gap-3 cursor-pointer" onclick="setView('home')">
-                                <img src="iem.png" alt="KUET Logo" class="h-12 w-auto object-contain" />
+                                <img src="iem.png" alt="iem Logo" class="h-12 w-auto object-contain" />
                                 <span class="text-xl font-bold text-slate-200">KUET IEM'21</span>
                             </div>
                             <div class="flex items-center gap-4">
@@ -680,17 +689,20 @@
                                 <input value="${f.teacher}" oninput="updateAdminForm('teacher', this.value, false)" class="w-full bg-black/20 border ${f.locked.teacher ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Dr. A. Smith" required />
                             </div>
                             
-                            <!-- Modified Category Select with Lock -->
+                            <!-- Modified Category Select to use handleCategoryChange -->
                             <div class="space-y-1">
                                 ${renderLabelWithLock('CATEGORY', 'category')}
-                                <select onchange="updateAdminForm('category', this.value)" class="w-full bg-black/20 border ${f.locked.category ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
+                                <select onchange="handleCategoryChange(this.value)" class="w-full bg-black/20 border ${f.locked.category ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
                                     ${CATEGORIES.map(c => `<option value="${c}" class="bg-slate-900" ${f.category === c ? 'selected' : ''}>${c}</option>`).join('')}
                                 </select>
                             </div>
                             
+                            <!-- Modified Section Select: Disabled if Books -->
                             <div class="space-y-1">
                                 ${renderLabelWithLock('SECTION', 'part')}
-                                <select onchange="updateAdminForm('part', this.value)" class="w-full bg-black/20 border ${f.locked.part ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
+                                <select onchange="updateAdminForm('part', this.value)" 
+                                    class="w-full bg-black/20 border ${f.locked.part ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                                    ${f.category === 'Books' ? 'disabled' : ''}>
                                     ${PARTS.map(p => `<option value="${p}" class="bg-slate-900" ${f.part === p ? 'selected' : ''}>${p}</option>`).join('')}
                                 </select>
                             </div>
