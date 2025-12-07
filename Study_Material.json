@@ -401,5 +401,18 @@
     "link": "https://drive.google.com/file/d/1MJVRhNrER1EJOQYyxditOkkEieGagrAJ/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-07T03:11:03.939Z"
+  },
+  {
+    "id": "d71badb9-bb44-4d59-9417-f6d35270796f",
+    "year": "3rd Year",
+    "semester": "1st Semester",
+    "subject": "Operation Management",
+    "topic": "Chapter-01 Introduction",
+    "teacher": "Kibriya Sir",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://drive.google.com/file/d/1CQ8TZ5RZ9-_TRaggAAt-fXAiU6tCucES/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-07T03:11:37.277Z"
   }
 ]
