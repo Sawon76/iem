@@ -24,23 +24,13 @@
         ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
 
-        /* Dropdown Option Styling - Forces dark theme on options */
-        select option {
-            background-color: #000000 !important;
-            color: #e2e8f0 !important;
-            padding: 10px;
-        }
+        /* Dropdown Option Styling */
+        select option { background-color: #000000 !important; color: #e2e8f0 !important; padding: 10px; }
 
         /* Grid Pattern Styles */
         .grid-pattern-container {
-            position: fixed;
-            top: -50%;
-            left: 0;
-            right: 0;
-            height: 200%;
-            transform: skewY(12deg);
-            z-index: 0;
-            pointer-events: none;
+            position: fixed; top: -50%; left: 0; right: 0; height: 200%;
+            transform: skewY(12deg); z-index: 0; pointer-events: none;
             mask-image: radial-gradient(600px circle at center, white, transparent);
             -webkit-mask-image: radial-gradient(600px circle at center, white, transparent);
         }
@@ -48,12 +38,7 @@
 </head>
 <body class="bg-black text-slate-200 selection:bg-cyan-500/30 selection:text-cyan-100 min-h-screen overflow-x-hidden relative">
 
-    <!-- Background: Interactive Grid Pattern -->
-    <div class="grid-pattern-container">
-        <canvas id="interactive-grid-canvas" class="w-full h-full"></canvas>
-    </div>
-
-    <!-- Main App Container -->
+    <div class="grid-pattern-container"><canvas id="interactive-grid-canvas" class="w-full h-full"></canvas></div>
     <div id="root" class="relative z-10"></div>
     <div id="modal-root" class="relative z-50"></div>
 
@@ -62,29 +47,21 @@
         (function setupInteractiveGrid() {
             const canvas = document.getElementById('interactive-grid-canvas');
             const ctx = canvas.getContext('2d');
-            
-            let width, height;
+            let width, height, mouseX = -1000, mouseY = -1000;
             const squareSize = 40; 
-            const gridGap = 1;     
-            
-            let mouseX = -1000;
-            let mouseY = -1000;
 
             function resize() {
                 const rect = canvas.parentElement.getBoundingClientRect();
-                width = rect.width;
-                height = rect.height;
-                canvas.width = width;
-                canvas.height = height;
+                width = rect.width; height = rect.height;
+                canvas.width = width; canvas.height = height;
                 draw();
             }
 
             window.addEventListener('mousemove', (e) => {
                 const rect = canvas.parentElement.getBoundingClientRect();
-                mouseX = e.clientX - rect.left;
-                mouseY = e.clientY - rect.top;
                 const skewRad = 12 * (Math.PI / 180);
                 const skewOffset = (e.clientX - (window.innerWidth / 2)) * Math.tan(skewRad);
+                mouseX = e.clientX - rect.left;
                 mouseY = (e.clientY - rect.top) - skewOffset;
             });
 
@@ -96,24 +73,15 @@
                 ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                
-                for (let i = 0; i <= cols; i++) {
-                    ctx.moveTo(i * squareSize, 0);
-                    ctx.lineTo(i * squareSize, height);
-                }
-                for (let j = 0; j <= rows; j++) {
-                    ctx.moveTo(0, j * squareSize);
-                    ctx.lineTo(width, j * squareSize);
-                }
+                for (let i = 0; i <= cols; i++) { ctx.moveTo(i * squareSize, 0); ctx.lineTo(i * squareSize, height); }
+                for (let j = 0; j <= rows; j++) { ctx.moveTo(0, j * squareSize); ctx.lineTo(width, j * squareSize); }
                 ctx.stroke();
 
                 if (mouseX > 0 && mouseY > 0) {
                     const hoverCol = Math.floor(mouseX / squareSize);
                     const hoverRow = Math.floor(mouseY / squareSize);
-                    
                     ctx.fillStyle = "rgba(100, 150, 255, 0.2)";
                     ctx.fillRect(hoverCol * squareSize + 1, hoverRow * squareSize + 1, squareSize - 2, squareSize - 2);
-
                     ctx.fillStyle = "rgba(100, 150, 255, 0.05)";
                     ctx.fillRect(hoverCol * squareSize + 1, (hoverRow - 1) * squareSize + 1, squareSize - 2, squareSize - 2);
                     ctx.fillRect(hoverCol * squareSize + 1, (hoverRow + 1) * squareSize + 1, squareSize - 2, squareSize - 2);
@@ -122,7 +90,6 @@
                 }
                 requestAnimationFrame(draw);
             }
-
             window.addEventListener('resize', resize);
             resize();
             requestAnimationFrame(draw);
@@ -135,17 +102,27 @@
             owner: "Sawon76", 
             repo: "iem",        
             branch: "main"
-            // dbPath removed: we now dynamically generate filenames based on category
         };
 
-        const apiKey = ""; // Gemini API Key (Runtime provided)
+        const apiKey = ""; 
 
         // --- Constants ---
         const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
         const SEMESTERS = ['1st Semester', '2nd Semester'];
-        // Added 'Books' to the categories list
         const CATEGORIES = ['Study Material', 'Term Questions', 'CT Questions', 'Lab Manual', 'Books'];
-        const PARTS = ['Part A', 'Part B', 'Both']; // Changed 'Complete' to 'Both'
+        const PARTS = ['Part A', 'Part B', 'Both'];
+        const DRIVE_TERMS = ['1st Term', '2nd Term'];
+
+        function getCategoryStyles(category) {
+            switch(category) {
+                case 'Study Material': return { badge: 'text-cyan-300 bg-cyan-500/10 border-cyan-500/20', gradient: 'bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500', icon: 'text-cyan-400', textColor: 'text-cyan-200' };
+                case 'Term Questions': return { badge: 'text-purple-300 bg-purple-500/10 border-purple-500/20', gradient: 'bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500', icon: 'text-purple-400', textColor: 'text-purple-200' };
+                case 'CT Questions': return { badge: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20', gradient: 'bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-500', icon: 'text-emerald-400', textColor: 'text-emerald-200' };
+                case 'Lab Manual': return { badge: 'text-amber-300 bg-amber-500/10 border-amber-500/20', gradient: 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500', icon: 'text-amber-400', textColor: 'text-amber-200' };
+                case 'Books': return { badge: 'text-rose-300 bg-rose-500/10 border-rose-500/20', gradient: 'bg-gradient-to-r from-rose-500 via-red-500 to-rose-500', icon: 'text-rose-400', textColor: 'text-rose-200' };
+                default: return { badge: 'text-slate-300 bg-slate-500/10 border-slate-500/20', gradient: 'bg-gradient-to-r from-slate-500 via-gray-500 to-slate-500', icon: 'text-slate-400', textColor: 'text-slate-200' };
+            }
+        }
 
         // --- State ---
         const state = {
@@ -154,14 +131,23 @@
             isAdmin: false,
             view: 'home',
             materials: [],
+            driveLinks: [], 
             loading: true,
+            
             filterYear: 'All', 
             filterSem: 'All',  
             filterSubject: 'All', 
-            filterCategory: 'All', // Added Category Filter state
+            filterCategory: 'All',
             searchSub: '',
             neuralTarget: null,
             
+            // New state for Floating Drive Finder
+            showDriveModal: false,
+            showDriveResultModal: false,
+            driveFinder: { year: YEARS[0], term: DRIVE_TERMS[0], results: [] },
+            
+            adminViewMode: 'materials', 
+
             adminForm: {
                 id: null,
                 year: '1st Year',
@@ -176,15 +162,15 @@
                 fileData: null,
                 fileName: '',
                 status: 'IDLE',
-                // Added locking state for subject and category
-                locked: {
-                    year: false,
-                    semester: false,
-                    teacher: false,
-                    part: false,
-                    subject: false,
-                    category: false
-                }
+                locked: { year: false, semester: false, teacher: false, part: false, subject: false, category: false }
+            },
+
+            driveForm: {
+                batch: '',
+                year: YEARS[0], 
+                term: DRIVE_TERMS[0], 
+                link: '',
+                status: 'IDLE'
             },
             
             neural: { activeTab: 'concepts', content: '', loading: false, data: {} }
@@ -198,7 +184,6 @@
                     state.user = user;
                     state.isAdmin = true;
                 } catch (e) {
-                    console.error("Token invalid", e);
                     localStorage.removeItem('gh_token');
                     state.token = null;
                 }
@@ -206,16 +191,13 @@
             fetchData();
         }
 
-        // --- GitHub API Helpers ---
         async function githubAPI(endpoint, method = 'GET', body = null) {
             const headers = {
                 'Accept': 'application/vnd.github.v3+json',
                 ...(state.token && { 'Authorization': `token ${state.token}` })
             };
-            
             const options = { method, headers };
             if (body) options.body = JSON.stringify(body);
-
             const res = await fetch(`https://api.github.com${endpoint}`, options);
             if (!res.ok) throw new Error(`GitHub API Error: ${res.status}`);
             return res.json();
@@ -224,73 +206,64 @@
         async function fetchData() {
             state.loading = true;
             render();
-            
             try {
-                // Fetch each category file in parallel
-                const promises = CATEGORIES.map(async (category) => {
+                const materialPromises = CATEGORIES.map(async (category) => {
                     const fileName = category.replace(/\s+/g, '_') + '.json';
-                    
                     try {
+                        let data = [];
                         if (state.token) {
-                            // Admin: Fetch via API
-                            try {
-                                const file = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${fileName}`);
-                                const content = atob(file.content);
-                                const data = JSON.parse(content);
-                                return data.map(item => ({ ...item, category })); 
-                            } catch (e) {
-                                if (e.message.includes('404')) return [];
-                                throw e;
-                            }
+                            const file = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${fileName}`);
+                            data = JSON.parse(atob(file.content));
                         } else {
-                            // Public: Fetch Raw
-                            // FIX: Added cache: 'no-store' to force fresh data from GitHub
-                            const cacheBuster = new Date().getTime();
-                            const url = `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${fileName}?t=${cacheBuster}`;
-                            
+                            const url = `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${fileName}?t=${Date.now()}`;
                             const res = await fetch(url, { cache: "no-store" });
-                            
-                            if (res.ok) {
-                                const data = await res.json();
-                                return data.map(item => ({ ...item, category }));
-                            }
-                            return [];
+                            if (res.ok) data = await res.json();
                         }
-                    } catch (err) {
-                        console.error(`Failed to fetch ${category}:`, err);
-                        return [];
-                    }
+                        return data.map(item => ({ ...item, category }));
+                    } catch (err) { return []; }
                 });
 
-                const results = await Promise.all(promises);
-                state.materials = results.flat();
+                const drivePromise = (async () => {
+                    const fileName = 'drive_links.json';
+                    try {
+                        let data = [];
+                        if (state.token) {
+                            const file = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${fileName}`);
+                            data = JSON.parse(atob(file.content));
+                        } else {
+                            const url = `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${fileName}?t=${Date.now()}`;
+                            const res = await fetch(url, { cache: "no-store" });
+                            if (res.ok) data = await res.json();
+                        }
+                        return data;
+                    } catch (err) { return []; }
+                })();
 
-            } catch (err) {
-                console.error("Fetch failed:", err);
-            } finally {
-                state.loading = false;
-                render();
-            }
+                const [materials, driveLinks] = await Promise.all([Promise.all(materialPromises), drivePromise]);
+                state.materials = materials.flat();
+                state.driveLinks = driveLinks;
+            } catch (err) { console.error("Fetch failed:", err); } finally { state.loading = false; render(); }
         }
 
         async function saveCategoryFile(category) {
             const fileName = category.replace(/\s+/g, '_') + '.json';
-            
-            // Filter materials belonging to this specific category
             const categoryMaterials = state.materials.filter(m => m.category === category);
+            await pushFileToGitHub(fileName, categoryMaterials, `Update ${category}`);
+        }
 
-            // Get SHA if updating
+        async function saveDriveLinks() {
+            await pushFileToGitHub('drive_links.json', state.driveLinks, 'Update Drive Links');
+        }
+
+        async function pushFileToGitHub(fileName, contentData, message) {
             let sha = null;
             try {
                 const current = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${fileName}`);
                 sha = current.sha;
             } catch (e) {}
-
-            const content = btoa(JSON.stringify(categoryMaterials, null, 2));
-            
             await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${fileName}`, 'PUT', {
-                message: `Update ${category}`,
-                content: content,
+                message: message,
+                content: btoa(JSON.stringify(contentData, null, 2)),
                 sha: sha
             });
         }
@@ -298,95 +271,85 @@
         async function uploadFileToGitHub(fileData, fileName) {
             const base64Content = fileData.split(',')[1];
             const path = `uploads/${Date.now()}_${fileName.replace(/\s/g, '_')}`;
-
-            const res = await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${path}`, 'PUT', {
+            await githubAPI(`/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${path}`, 'PUT', {
                 message: `Upload ${fileName}`,
                 content: base64Content
             });
-
             return `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${path}`;
         }
 
         // --- Actions ---
-
         window.setView = (view) => { state.view = view; render(); };
-        
         window.setFilter = (k, v) => { 
             state[k] = v; 
-            if (k === 'filterYear' || k === 'filterSem') {
-                state.filterSubject = 'All';
-            }
+            if (k === 'filterYear' || k === 'filterSem') state.filterSubject = 'All';
             render(); 
         };
         
-        // Prevents re-render on each keystroke for admin inputs
-        window.updateAdminForm = (k, v, shouldRender = true) => { 
-            state.adminForm[k] = v; 
-            if (shouldRender) render(); 
+        window.updateAdminForm = (k, v, shouldRender = true) => { state.adminForm[k] = v; if (shouldRender) render(); };
+        window.updateDriveForm = (k, v, shouldRender = true) => { state.driveForm[k] = v; if (shouldRender) render(); };
+        window.setAdminViewMode = (mode) => { state.adminViewMode = mode; render(); };
+
+        window.toggleDriveModal = () => {
+            state.showDriveModal = !state.showDriveModal;
+            state.showDriveResultModal = false;
+            state.driveFinder.results = []; 
+            render();
+        };
+        window.closeDriveResultModal = () => { state.showDriveResultModal = false; render(); };
+        window.updateDriveFinder = (k, v) => { state.driveFinder[k] = v; render(); };
+        window.findDriveLink = () => {
+            const { year, term } = state.driveFinder;
+            const matches = state.driveLinks.filter(l => l.year === year && l.term === term);
+            state.driveFinder.results = matches;
+            state.showDriveResultModal = true;
+            render();
         };
 
-        // NEW: Specific handler for category changes to auto-set 'Both' for Books
         window.handleCategoryChange = (value) => {
             state.adminForm.category = value;
-            if (value === 'Books') {
-                state.adminForm.part = 'Both'; // Changed 'Complete' to 'Both'
-            }
+            if (value === 'Books') state.adminForm.part = 'Both';
             render();
         };
 
-        // Toggle lock state for a field
-        window.toggleLock = (field) => {
-            state.adminForm.locked[field] = !state.adminForm.locked[field];
-            render();
-        };
+        window.toggleLock = (field) => { state.adminForm.locked[field] = !state.adminForm.locked[field]; render(); };
 
         window.handleLogin = async (e) => {
             e.preventDefault();
             const token = e.target.token.value.trim();
-            if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-                alert("Invalid Token format.");
-                return;
-            }
-            
+            if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) { alert("Invalid Token format."); return; }
             localStorage.setItem('gh_token', token);
             state.token = token;
             await init(); 
-            if (state.user) state.view = 'admin';
-            else alert("Token verification failed.");
+            if (state.user) state.view = 'admin'; else alert("Token verification failed.");
             render();
         };
 
-        window.handleLogout = () => {
-            localStorage.removeItem('gh_token');
-            state.token = null;
-            state.user = null;
-            state.isAdmin = false;
-            state.view = 'home';
-            render();
-        };
+        window.handleLogout = () => { localStorage.removeItem('gh_token'); state.token = null; state.user = null; state.isAdmin = false; state.view = 'home'; render(); };
 
         window.handleFileSelect = (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            if (file.size > 25 * 1024 * 1024) { 
-                alert("File too large! Keep under 25MB.");
-                e.target.value = '';
-                return;
-            }
+            if (file.size > 25 * 1024 * 1024) { alert("File too large! Keep under 25MB."); e.target.value = ''; return; }
             const reader = new FileReader();
-            reader.onloadend = () => {
-                state.adminForm.fileData = reader.result;
-                state.adminForm.fileName = file.name;
-                render();
-            };
+            reader.onloadend = () => { state.adminForm.fileData = reader.result; state.adminForm.fileName = file.name; render(); };
             reader.readAsDataURL(file);
+        };
+        
+        // Define handleDownload globally
+        window.handleDownload = (fileData, fileName) => {
+            const link = document.createElement('a');
+            link.href = fileData;
+            link.download = fileName || 'download';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         };
 
         window.handleAdminSubmit = async (e) => {
             e.preventDefault();
             const form = state.adminForm;
-            state.adminForm.status = 'UPLOADING';
-            render();
+            state.adminForm.status = 'UPLOADING'; render();
 
             try {
                 let downloadUrl = form.link;
@@ -397,68 +360,58 @@
 
                 const newItem = {
                     id: form.id || crypto.randomUUID(),
-                    year: form.year,
-                    semester: form.semester,
-                    subject: form.subject,
-                    topic: form.topic || '', 
-                    teacher: form.teacher,
-                    category: form.category,
-                    part: form.part,
-                    link: downloadUrl,
-                    isFile: form.storageType === 'file',
-                    createdAt: new Date().toISOString()
+                    year: form.year, semester: form.semester, subject: form.subject, topic: form.topic || '', 
+                    teacher: form.teacher, category: form.category, part: form.part, link: downloadUrl,
+                    isFile: form.storageType === 'file', createdAt: new Date().toISOString()
                 };
 
-                // Track category change for editing
                 let oldCategory = null;
                 let newMaterials = [...state.materials];
-
                 if (form.id) {
                     const idx = newMaterials.findIndex(m => m.id === form.id);
-                    if (idx !== -1) {
-                        oldCategory = newMaterials[idx].category;
-                        newMaterials[idx] = newItem;
-                    }
-                } else {
-                    newMaterials.push(newItem);
-                }
+                    if (idx !== -1) { oldCategory = newMaterials[idx].category; newMaterials[idx] = newItem; }
+                } else { newMaterials.push(newItem); }
 
-                // Update local state immediately
                 state.materials = newMaterials;
-
-                // Save to GitHub
-                // 1. Save the new category file
                 await saveCategoryFile(newItem.category);
+                if (oldCategory && oldCategory !== newItem.category) await saveCategoryFile(oldCategory);
                 
-                // 2. If editing and category changed, update old category file too
-                if (oldCategory && oldCategory !== newItem.category) {
-                    await saveCategoryFile(oldCategory);
-                }
-                
-                state.adminForm.status = 'SUCCESS';
-                render();
+                state.adminForm.status = 'SUCCESS'; render();
                 setTimeout(() => { resetAdminForm(); render(); }, 1500);
+            } catch (err) { alert("Error: " + err.message); state.adminForm.status = 'ERROR'; render(); }
+        };
 
-            } catch (err) {
-                console.error(err);
-                alert("Error: " + err.message);
-                state.adminForm.status = 'ERROR';
+        window.handleDriveSubmit = async (e) => {
+            e.preventDefault();
+            const form = state.driveForm;
+            state.driveForm.status = 'SAVING'; render();
+            try {
+                const newLink = { id: crypto.randomUUID(), batch: form.batch, year: form.year, term: form.term, link: form.link };
+                state.driveLinks = [...state.driveLinks, newLink];
+                await saveDriveLinks();
+                state.driveForm = { batch: '', year: YEARS[0], term: DRIVE_TERMS[0], link: '', status: 'SUCCESS' };
                 render();
-            }
+                setTimeout(() => { state.driveForm.status = 'IDLE'; render(); }, 1500);
+            } catch (err) { alert("Error: " + err.message); state.driveForm.status = 'IDLE'; render(); }
         };
 
         window.handleDelete = async (id) => {
-            if(!confirm("Permanently delete this entry?")) return;
+            if(!confirm("Permanently delete?")) return;
             try {
                 const item = state.materials.find(m => m.id === id);
                 if (!item) return;
+                const cat = item.category;
+                state.materials = state.materials.filter(m => m.id !== id);
+                await saveCategoryFile(cat);
+                render();
+            } catch (err) { alert("Delete Failed: " + err.message); }
+        };
 
-                const category = item.category;
-                const newMaterials = state.materials.filter(m => m.id !== id);
-                state.materials = newMaterials;
-                
-                await saveCategoryFile(category);
-                
+        window.handleDeleteDriveLink = async (id) => {
+            if(!confirm("Remove this drive link?")) return;
+            try {
+                state.driveLinks = state.driveLinks.filter(l => l.id !== id);
+                await saveDriveLinks();
                 render();
             } catch (err) { alert("Delete Failed: " + err.message); }
         };
@@ -466,14 +419,7 @@
         window.handleEdit = (id) => {
             const item = state.materials.find(m => m.id === id);
             if (!item) return;
-            state.adminForm = { 
-                ...state.adminForm, 
-                ...item, 
-                id: item.id, 
-                topic: item.topic || '',
-                storageType: item.isFile ? 'file' : 'link', 
-                status: 'IDLE' 
-            };
+            state.adminForm = { ...state.adminForm, ...item, id: item.id, topic: item.topic || '', storageType: item.isFile ? 'file' : 'link', status: 'IDLE' };
             window.scrollTo({top:0, behavior:'smooth'});
             render();
         };
@@ -481,34 +427,170 @@
         window.cancelEdit = () => { resetAdminForm(); render(); };
 
         function resetAdminForm() {
-            const current = state.adminForm;
-            const locks = current.locked;
-
+            const current = state.adminForm; const locks = current.locked;
             state.adminForm = {
-                id: null, 
-                year: locks.year ? current.year : YEARS[0], 
-                semester: locks.semester ? current.semester : SEMESTERS[0], 
-                // Respect subject lock
-                subject: locks.subject ? current.subject : '', 
-                topic: '', 
-                teacher: locks.teacher ? current.teacher : '', 
-                // Respect category lock
-                category: locks.category ? current.category : 'Study Material', 
-                part: locks.part ? current.part : 'Part A', 
-                link: '', 
-                storageType: 'link', 
-                fileData: null, 
-                fileName: '', 
-                status: 'IDLE',
-                locked: locks
+                id: null, year: locks.year ? current.year : YEARS[0], semester: locks.semester ? current.semester : SEMESTERS[0], 
+                subject: locks.subject ? current.subject : '', topic: '', teacher: locks.teacher ? current.teacher : '', 
+                category: locks.category ? current.category : 'Study Material', part: locks.part ? current.part : 'Part A', 
+                link: '', storageType: 'link', fileData: null, fileName: '', status: 'IDLE', locked: locks
             };
         }
 
-        // --- Rendering ---
+        // --- Render Helpers ---
+        function renderSetup() { return `<div class="min-h-screen flex items-center justify-center p-4 text-center"><div class="bg-black/40 backdrop-blur-md p-8 rounded-2xl border border-white/10 max-w-lg"><i data-lucide="github" class="w-12 h-12 text-white mx-auto mb-4"></i><h1 class="text-xl font-bold text-white mb-2">GitHub Setup Required</h1><p class="text-slate-400 text-sm mb-6">Open code & edit <code>GITHUB_CONFIG</code>.</p></div></div>`; }
+        function renderNav() {
+            return `
+                <nav class="relative z-20 mx-4 mt-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg shadow-black/20">
+                    <div class="max-w-7xl mx-auto px-6">
+                        <div class="flex flex-col md:flex-row items-center justify-between min-h-[5rem] py-4 md:py-0 gap-4">
+                            <div class="flex items-center gap-3 cursor-pointer" onclick="setView('home')">
+                                <img src="iem.png" alt="KUET Logo" class="h-12 w-auto object-contain" />
+                                <span class="text-xl font-bold text-slate-200">KUET IEM'21</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="hidden md:flex items-center gap-2 text-xs font-medium text-slate-400 bg-black/20 px-3 py-1 rounded-full border border-white/5"><div class="w-2 h-2 rounded-full ${state.user ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-rose-400'}"></div>${state.user ? 'ADMIN ONLINE' : 'ONLINE'}</div>
+                                ${state.isAdmin ? `<button onclick="handleLogout()" class="px-4 py-2 text-xs font-bold text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-xl hover:bg-rose-500/20">LOGOUT</button>` : `<button onclick="setView('login')" class="px-4 py-2 text-xs font-bold text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/20">ADMIN LOGIN</button>`}
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            `;
+        }
+        function renderLogin() { return `<div class="flex justify-center items-center py-20 animate-fadeIn"><div class="w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-2xl"><div class="text-center mb-8"><div class="inline-block p-4 bg-cyan-500/10 rounded-full border border-cyan-500/20 mb-4"><i data-lucide="key" class="w-8 h-8 text-cyan-400"></i></div><h2 class="text-2xl font-bold text-white">Admin Authentication</h2></div><form onsubmit="handleLogin(event)" class="space-y-6"><div><label class="block text-xs font-bold text-slate-300 mb-2 ml-1">GITHUB TOKEN</label><input name="token" type="password" class="w-full bg-black/40 border border-white/10 text-white p-4 rounded-xl outline-none" required /></div><button type="submit" class="w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600">VERIFY</button></form></div></div>`; }
+        function renderFloatingButton() { return `<div class="fixed bottom-8 right-8 z-50 animate-fadeIn"><button onclick="toggleDriveModal()" class="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full shadow-lg shadow-purple-500/30 flex items-center justify-center text-white hover:scale-110 transition-transform group"><i data-lucide="hard-drive" class="w-6 h-6 group-hover:animate-bounce"></i></button></div>`; }
+        
+        function renderAdmin() {
+            const f = state.adminForm;
+            const uniqueSubjects = [...new Set(state.materials.map(m => m.subject).filter(Boolean))].sort();
+            const renderLabelWithLock = (label, field) => { const isLocked = f.locked[field]; return `<div class="flex justify-between items-center mb-1"><label class="text-xs font-bold ${isLocked ? 'text-amber-400' : 'text-slate-300'} ml-1">${label}</label><button type="button" onclick="toggleLock('${field}')" class="focus:outline-none"><i data-lucide="${isLocked ? 'lock' : 'unlock'}" class="w-3 h-3 ${isLocked ? 'text-amber-400' : 'text-slate-600'}"></i></button></div>`; };
+            const categories = Object.keys(state.materials.reduce((acc, item) => { const cat = item.category || 'Uncategorized'; if (!acc[cat]) acc[cat] = []; acc[cat].push(item); return acc; }, {})).sort();
+
+            return `
+                <div class="max-w-4xl mx-auto space-y-8 animate-fadeIn">
+                    <div class="flex justify-center mb-6"><div class="bg-black/30 p-1 rounded-full border border-white/10 flex"><button onclick="setAdminViewMode('materials')" class="px-6 py-2 rounded-full text-sm font-bold transition-all ${state.adminViewMode === 'materials' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow' : 'text-slate-400 hover:text-white'}">Study Materials</button><button onclick="setAdminViewMode('drives')" class="px-6 py-2 rounded-full text-sm font-bold transition-all ${state.adminViewMode === 'drives' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow' : 'text-slate-400 hover:text-white'}">Previous Year Drives</button></div></div>
+                    ${state.adminViewMode === 'materials' ? `
+                        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl">
+                            <div class="flex items-center justify-between mb-8 border-b border-white/10 pb-6"><div class="flex items-center gap-4"><div class="p-3 rounded-xl shadow-lg bg-gradient-to-br from-emerald-500 to-green-600"><i data-lucide="${f.id ? 'pencil' : 'upload'}" class="w-6 h-6 text-white"></i></div><div><h2 class="text-xl font-bold text-white">${f.id ? 'Edit Material' : 'Upload Material'}</h2><p class="text-sm text-slate-400">Add resources to the database.</p></div></div>${f.id ? `<button onclick="cancelEdit()" class="text-xs font-bold text-slate-300 hover:text-white flex gap-1"><i data-lucide="rotate-ccw" class="w-3 h-3"></i> CANCEL</button>` : ''}</div>
+                            <form onsubmit="handleAdminSubmit(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-1">${renderLabelWithLock('ACADEMIC YEAR', 'year')}<select onchange="updateAdminForm('year', this.value)" class="w-full bg-black/20 border ${f.locked.year ? 'border-amber-500/30' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none">${YEARS.map(y => `<option value="${y}" class="bg-slate-900" ${f.year === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+                                <div class="space-y-1">${renderLabelWithLock('SEMESTER', 'semester')}<select onchange="updateAdminForm('semester', this.value)" class="w-full bg-black/20 border ${f.locked.semester ? 'border-amber-500/30' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none">${SEMESTERS.map(s => `<option value="${s}" class="bg-slate-900" ${f.semester === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+                                <div class="col-span-1 md:col-span-2 space-y-1">${renderLabelWithLock('SUBJECT NAME', 'subject')}<input list="subject-options" value="${f.subject}" oninput="updateAdminForm('subject', this.value, false)" class="w-full bg-black/20 border ${f.locked.subject ? 'border-amber-500/30' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none" required /><datalist id="subject-options">${uniqueSubjects.map(s => `<option value="${s}">`).join('')}</datalist></div>
+                                <div class="col-span-1 md:col-span-2 space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">TOPIC NAME</label><input value="${f.topic}" oninput="updateAdminForm('topic', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" required /></div>
+                                <div class="col-span-1 md:col-span-2 space-y-1">${renderLabelWithLock('INSTRUCTOR', 'teacher')}<input value="${f.teacher}" oninput="updateAdminForm('teacher', this.value, false)" class="w-full bg-black/20 border ${f.locked.teacher ? 'border-amber-500/30' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none" required /></div>
+                                <div class="space-y-1">${renderLabelWithLock('CATEGORY', 'category')}<select onchange="handleCategoryChange(this.value)" class="w-full bg-black/20 border ${f.locked.category ? 'border-amber-500/30' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none">${CATEGORIES.map(c => `<option value="${c}" class="bg-slate-900" ${f.category === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                                <div class="space-y-1">${renderLabelWithLock('SECTION', 'part')}<select onchange="updateAdminForm('part', this.value)" class="w-full bg-black/20 border ${f.locked.part ? 'border-amber-500/30' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none" ${f.category === 'Books' ? 'disabled' : ''}>${PARTS.map(p => `<option value="${p}" class="bg-slate-900" ${f.part === p ? 'selected' : ''}>${p}</option>`).join('')}</select></div>
+                                <div class="col-span-1 md:col-span-2 pt-2 border-t border-white/5"><div class="flex gap-4 mb-2"><button type="button" onclick="updateAdminForm('storageType', 'link')" class="flex-1 py-2 text-xs font-bold rounded-lg border ${f.storageType === 'link' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'border-white/5'}">Link</button><button type="button" onclick="updateAdminForm('storageType', 'file')" class="flex-1 py-2 text-xs font-bold rounded-lg border ${f.storageType === 'file' ? 'bg-purple-500/20 text-purple-300 border-purple-500/50' : 'border-white/5'}">Upload</button></div>${f.storageType === 'link' ? `<input value="${f.link}" oninput="updateAdminForm('link', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="URL..." />` : `<input type="file" onchange="handleFileSelect(event)" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-500/10 file:text-purple-300" />`}</div>
+                                <button type="submit" ${f.status !== 'IDLE' ? 'disabled' : ''} class="col-span-1 md:col-span-2 w-full py-4 rounded-full text-sm font-bold shadow-lg transition-all flex justify-center items-center gap-2 ${f.status === 'SUCCESS' ? 'bg-emerald-500 text-white' : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'}">${f.status === 'IDLE' ? (f.id ? 'UPDATE MATERIAL' : 'INITIATE UPLOAD') : f.status}</button>
+                            </form>
+                        </div>
+                        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl"><h3 class="text-sm font-bold text-slate-400 mb-4 px-2 uppercase tracking-widest">Database Entries</h3><div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">${categories.map(cat => `<div><h4 class="text-xs font-bold text-cyan-400 mb-2">${cat}</h4>${state.materials.filter(m => m.category === cat).map(m => {const styles = getCategoryStyles(m.category); return `<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-black/40 rounded-lg border border-white/5 hover:border-white/10 transition-colors gap-3"><div class="w-full sm:w-auto"><h4 class="text-sm font-medium text-slate-200">${m.topic || m.subject}</h4><div class="flex items-center gap-2 mt-1 text-xs text-slate-500"><span class="truncate max-w-[150px]">${m.subject}</span><span class="${styles.badge} px-1.5 py-0.5 rounded text-[10px] border">${m.category}</span><span>• ${m.year}</span></div></div><div class="flex gap-2 w-full sm:w-auto justify-end"><button onclick="handleEdit('${m.id}')" class="p-2 rounded bg-slate-800 text-slate-400 hover:text-white transition-colors"><i data-lucide="pencil" class="w-3 h-3"></i></button><button onclick="handleDelete('${m.id}')" class="p-2 rounded bg-rose-900/30 text-rose-400 hover:bg-rose-900/50 transition-colors"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>`}).join('')}</div>`).join('')}</div></div>
+                    ` : `
+                        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl"><div class="flex items-center gap-4 mb-8 border-b border-white/10 pb-6"><div class="p-3 rounded-xl shadow-lg bg-gradient-to-br from-purple-500 to-pink-600"><i data-lucide="hard-drive" class="w-6 h-6 text-white"></i></div><div><h2 class="text-xl font-bold text-white">Add Drive Link</h2><p class="text-sm text-slate-400">Previous year questions & resources.</p></div></div><form onsubmit="handleDriveSubmit(event)" class="grid grid-cols-1 gap-6"><div class="space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">BATCH NAME</label><input value="${state.driveForm.batch}" oninput="updateDriveForm('batch', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. IEM 2k19" required /></div><div class="grid grid-cols-2 gap-4"><div class="space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">YEAR</label><select onchange="updateDriveForm('year', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none">${YEARS.map(y => `<option value="${y}" class="bg-slate-900" ${state.driveForm.year === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div class="space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">TERM</label><select onchange="updateDriveForm('term', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none">${DRIVE_TERMS.map(t => `<option value="${t}" class="bg-slate-900" ${state.driveForm.term === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div></div><div class="space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">DRIVE URL</label><input value="${state.driveForm.link}" oninput="updateDriveForm('link', this.value, false)" type="url" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="https://drive.google.com..." required /></div><button type="submit" ${state.driveForm.status !== 'IDLE' ? 'disabled' : ''} class="w-full py-4 rounded-full text-sm font-bold shadow-lg transition-all flex justify-center items-center gap-2 ${state.driveForm.status === 'SUCCESS' ? 'bg-emerald-500 text-white' : 'bg-gradient-to-r from-purple-500 to-pink-600 text-white'}">${state.driveForm.status === 'IDLE' ? 'ADD DRIVE LINK' : state.driveForm.status}</button></form></div>
+                        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl"><h3 class="text-sm font-bold text-slate-400 mb-4 px-2 uppercase tracking-widest">Active Links</h3><div class="space-y-3 max-h-[400px] overflow-y-auto pr-2">${state.driveLinks.length === 0 ? '<p class="text-slate-500 text-center">No links added.</p>' : state.driveLinks.map(l => `<div class="flex items-center justify-between p-3 bg-black/30 rounded-xl border border-white/5"><div><div class="font-bold text-slate-200 text-sm">${l.batch}</div><div class="text-xs text-slate-500">${l.year} • ${l.term}</div></div><button onclick="handleDeleteDriveLink('${l.id}')" class="p-2 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('')}</div></div>
+                    `}
+                </div>
+            `;
+        }
+
+        function renderHome() {
+            const yearSemFiltered = state.materials.filter(m => {
+                const y = state.filterYear === 'All' || m.year === state.filterYear;
+                const s = state.filterSem === 'All' || m.semester === state.filterSem;
+                return y && s;
+            });
+            const availableSubjects = [...new Set(yearSemFiltered.map(m => m.subject || ''))].filter(Boolean).sort();
+            const finalFiltered = yearSemFiltered.filter(m => {
+                const subMatch = state.filterSubject === 'All' || m.subject === state.filterSubject;
+                const catMatch = state.filterCategory === 'All' || m.category === state.filterCategory;
+                const q = state.searchSub.toLowerCase();
+                const searchMatch = !q || (m.subject && m.subject.toLowerCase().includes(q)) || (m.topic && m.topic.toLowerCase().includes(q)) || (m.teacher && m.teacher.toLowerCase().includes(q));
+                return subMatch && catMatch && searchMatch;
+            });
+            const groupedMaterials = finalFiltered.reduce((acc, item) => {
+                const subj = item.subject || 'Uncategorized';
+                if (!acc[subj]) acc[subj] = [];
+                acc[subj].push(item);
+                return acc;
+            }, {});
+            const sortedSubjects = Object.keys(groupedMaterials).sort();
+
+            return `
+                <div class="space-y-8 animate-fadeIn">
+                    <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-4 md:p-6 rounded-3xl shadow-xl relative z-30">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
+                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">YEAR</label><div class="relative"><select onchange="setFilter('filterYear', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none cursor-pointer hover:border-cyan-500/30 transition-colors"><option value="All" class="bg-black" ${state.filterYear === 'All' ? 'selected' : ''}>All Years</option>${YEARS.map(y => `<option value="${y}" class="bg-black" ${state.filterYear === y ? 'selected' : ''}>${y}</option>`).join('')}</select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
+                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEMESTER</label><div class="relative"><select onchange="setFilter('filterSem', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none cursor-pointer hover:border-cyan-500/30 transition-colors"><option value="All" class="bg-black" ${state.filterSem === 'All' ? 'selected' : ''}>All Semesters</option>${SEMESTERS.map(s => `<option value="${s}" class="bg-black" ${state.filterSem === s ? 'selected' : ''}>${s}</option>`).join('')}</select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
+                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SUBJECT</label><div class="relative"><select onchange="setFilter('filterSubject', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none cursor-pointer hover:border-cyan-500/30 transition-colors" ${availableSubjects.length === 0 ? 'disabled' : ''}><option value="All" class="bg-black">All Subjects</option>${availableSubjects.map(sub => `<option value="${sub}" class="bg-black" ${state.filterSubject === sub ? 'selected' : ''}>${sub}</option>`).join('')}</select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
+                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">CATEGORY</label><div class="relative"><select onchange="setFilter('filterCategory', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none cursor-pointer hover:border-cyan-500/30 transition-colors"><option value="All" class="bg-black">All Categories</option>${CATEGORIES.map(c => `<option value="${c}" class="bg-black" ${state.filterCategory === c ? 'selected' : ''}>${c}</option>`).join('')}</select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
+                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEARCH</label><div class="relative"><input id="search-input" oninput="setFilter('searchSub', this.value)" value="${state.searchSub}" class="w-full bg-black border border-white/10 text-slate-200 h-12 pl-10 pr-4 rounded-full text-sm outline-none placeholder-slate-600 focus:border-cyan-500/30 transition-colors" placeholder="Topic, Subject..." /><i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
+                        </div>
+                    </div>
+
+                    ${state.loading ? `<div class="text-center py-20 opacity-50 text-sm tracking-widest text-cyan-400 animate-pulse">LOADING...</div>` :
+                      finalFiltered.length === 0 ? `<div class="text-center py-20 opacity-50 text-slate-500">No materials found.</div>` :
+                      `<div class="space-y-12">
+                          ${sortedSubjects.map(subject => `
+                              <div class="animate-fadeIn">
+                                  <div class="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+                                      <div class="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg border border-cyan-500/30"><i data-lucide="book-open" class="w-5 h-5 text-cyan-400"></i></div>
+                                      <h2 class="text-2xl font-bold text-white tracking-wide">${subject}</h2>
+                                      <span class="text-xs font-medium text-slate-500 bg-white/5 px-2 py-1 rounded-full ml-auto">${groupedMaterials[subject].length} Resources</span>
+                                  </div>
+                                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${groupedMaterials[subject].map(m => renderCard(m)).join('')}</div>
+                              </div>
+                          `).join('')}
+                      </div>`
+                    }
+                </div>
+            `;
+        }
+
+        function renderCard(data) {
+            const isFile = !!data.fileData;
+            const safeData = isFile ? encodeURIComponent(data.fileData) : '';
+            const safeName = isFile ? encodeURIComponent(data.fileName || 'download') : '';
+            const displayTitle = data.topic || data.subject;
+            const displaySubtitle = data.topic ? data.subject : ''; 
+            const styles = getCategoryStyles(data.category);
+
+            return `
+                <div class="group relative flex flex-col bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:border-white/20 transition-all duration-500 hover:-translate-y-1">
+                    <div class="h-1 w-full opacity-70 group-hover:opacity-100 transition-opacity ${styles.gradient}"></div>
+                    <div class="p-6 flex-1">
+                        <div class="flex justify-between items-start mb-4"><span class="text-[10px] font-bold px-3 py-1 rounded-full border uppercase tracking-wide ${styles.badge}">${data.category}</span></div>
+                        <h3 class="text-lg font-bold text-white mb-1 group-hover:${styles.textColor} transition-colors line-clamp-1">${displayTitle}</h3>
+                        ${displaySubtitle ? `<p class="text-xs text-slate-400 mb-2 font-medium">${displaySubtitle}</p>` : ''}
+                        <div class="flex items-center gap-2 mb-6 mt-3"><div class="w-6 h-6 rounded-full bg-slate-700/50 flex items-center justify-center border border-white/10"><i data-lucide="user" class="w-3 h-3 text-slate-300"></i></div><span class="text-sm text-slate-400 font-medium">${data.teacher}</span></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-black/20 rounded-xl p-2.5 border border-white/5"><span class="block text-slate-500 font-bold text-[9px] uppercase mb-0.5">Semester</span><span class="text-xs text-slate-300 font-medium">${data.year} • ${data.semester.split(' ')[0]}</span></div>
+                            <div class="bg-black/20 rounded-xl p-2.5 border border-white/5"><span class="block text-slate-500 font-bold text-[9px] uppercase mb-0.5">Segment</span><span class="text-xs text-slate-300 font-medium">${data.part}</span></div>
+                        </div>
+                    </div>
+                    <div class="flex border-t border-white/10 divide-x divide-white/10 bg-black/10">
+                        ${isFile 
+                            ? `<button onclick="handleDownload(decodeURIComponent('${safeData}'), decodeURIComponent('${safeName}'))" class="flex-1 p-4 flex items-center justify-center gap-2 text-sm font-medium ${styles.icon} hover:bg-white/5 transition-colors"><i data-lucide="database" class="w-4 h-4"></i> Retrieve</button>`
+                            : `<a href="${data.link}" target="_blank" class="flex-1 p-4 flex items-center justify-center gap-2 text-sm font-medium text-cyan-300 hover:bg-white/5 transition-colors"><i data-lucide="download" class="w-4 h-4"></i> Download</a>`
+                        }
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderDriveFinderModal() {
+            const { year, term } = state.driveFinder;
+            return `<div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"><div class="w-full max-w-sm bg-slate-900 border border-purple-500/30 rounded-3xl shadow-2xl overflow-hidden relative"><div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500"></div><button onclick="toggleDriveModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button><div class="p-8 text-center"><div class="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-purple-500/20"><i data-lucide="search" class="w-8 h-8 text-purple-400"></i></div><h2 class="text-2xl font-bold text-white mb-2">Find Archives</h2><p class="text-sm text-slate-400 mb-8">Select session details below</p><div class="space-y-4 mb-8 text-left"><div><label class="text-xs font-bold text-slate-500 ml-1">YEAR</label><select onchange="updateDriveFinder('year', this.value)" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-purple-500/50">${YEARS.map(y => `<option value="${y}" class="bg-slate-900" ${year === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div><label class="text-xs font-bold text-slate-500 ml-1">TERM</label><select onchange="updateDriveFinder('term', this.value)" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-purple-500/50">${DRIVE_TERMS.map(t => `<option value="${t}" class="bg-slate-900" ${term === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div></div><button onclick="findDriveLink()" class="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">SHOW DRIVE <i data-lucide="arrow-right" class="w-4 h-4"></i></button></div></div></div>`;
+        }
+
+        function renderDriveResultModal() {
+            const { results } = state.driveFinder;
+            return `<div class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn"><div class="w-full max-w-md bg-slate-900 border border-purple-500/50 rounded-3xl shadow-[0_0_50px_rgba(168,85,247,0.2)] overflow-hidden relative transform scale-100 transition-transform"><div class="flex justify-between items-center p-6 border-b border-white/10 bg-white/5"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="folder-open" class="w-5 h-5 text-purple-400"></i> Results Found</h2><button onclick="closeDriveResultModal()" class="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-all"><i data-lucide="x" class="w-6 h-6"></i></button></div><div class="p-6 max-h-[60vh] overflow-y-auto">${results.length === 0 ? `<div class="text-center py-10"><div class="inline-block p-4 bg-rose-500/10 rounded-full mb-3"><i data-lucide="alert-circle" class="w-8 h-8 text-rose-400"></i></div><p class="text-slate-300 font-medium">No archives found for this session.</p><button onclick="closeDriveResultModal()" class="mt-4 text-xs text-purple-400 hover:text-purple-300 hover:underline">Try a different year</button></div>` : `<div class="space-y-4">${results.map(l => `<div class="bg-gradient-to-br from-purple-900/30 to-black border border-purple-500/30 rounded-2xl p-6 hover:border-purple-500/60 transition-all group shadow-lg"><div class="flex justify-between items-start mb-4"><span class="text-xs font-bold text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full border border-purple-500/20 tracking-wider">BATCH</span><div class="text-right"><div class="text-xs font-bold text-white">${l.year}</div><div class="text-[10px] text-slate-400 uppercase">${l.term}</div></div></div><h3 class="text-2xl font-bold text-white mb-6 tracking-tight">${l.batch}</h3><a href="${l.link}" target="_blank" class="flex items-center justify-center gap-3 w-full py-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-base transition-all shadow-lg shadow-purple-900/20 group-hover:scale-[1.02]"><i data-lucide="external-link" class="w-5 h-5"></i> OPEN GOOGLE DRIVE</a></div>`).join('')}</div>`}</div></div></div>`;
+        }
+
+        // --- Restored: Main Render Function ---
         function render() {
             const root = document.getElementById('root');
+            const modalRoot = document.getElementById('modal-root');
             
-            // 1. Capture Focus State before re-rendering
             let focusedId = null;
             let selectionStart = 0;
             let selectionEnd = 0;
@@ -520,10 +602,8 @@
                 }
             }
 
-            if (GITHUB_CONFIG.owner === "YOUR_GITHUB_USERNAME") {
-                root.innerHTML = renderSetup();
-                lucide.createIcons();
-                return;
+            if (GITHUB_CONFIG.owner === "Sawon76") { 
+                // Configured
             }
 
             const nav = renderNav();
@@ -532,443 +612,35 @@
             else if (state.view === 'admin' && state.isAdmin) content = renderAdmin();
             else content = renderHome();
 
-            const footer = `
-                <footer class="relative z-10 mt-12 py-8 text-center text-slate-500 text-xs">
-                    <div class="inline-block px-4 py-2 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm">
-                        Made by SAWON MUKHERJEE
-                    </div>
-                </footer>`;
+            const footer = `<footer class="relative z-10 mt-12 py-8 text-center text-slate-500 text-xs"><div class="inline-block px-4 py-2 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm">Made by SAWON MUKHERJEE</div></footer>`;
+            const floatingBtn = state.view === 'home' ? renderFloatingButton() : '';
 
-            root.innerHTML = nav + `<main class="relative z-10 max-w-7xl mx-auto px-4 py-8 min-h-[80vh]">${content}</main>` + footer;
+            root.innerHTML = nav + `<main class="relative z-10 max-w-7xl mx-auto px-4 py-8 min-h-[80vh]">${content}</main>` + footer + floatingBtn;
             
-            // 2. Restore Focus State after re-rendering
-            if (focusedId) {
-                const el = document.getElementById(focusedId);
+            // Modal Rendering Logic
+            let modalContent = '';
+            if (state.neuralTarget) {
+                modalContent = renderNeuralModal();
+            } else if (state.showDriveResultModal) {
+                modalContent = renderDriveResultModal(); 
+            } else if (state.showDriveModal) {
+                modalContent = renderDriveFinderModal();
+            }
+            modalRoot.innerHTML = modalContent;
+            
+            if (focusedId) { 
+                const el = document.getElementById(focusedId); 
                 if (el) {
                     el.focus();
                     if (typeof el.setSelectionRange === 'function') {
                         el.setSelectionRange(selectionStart, selectionEnd);
                     }
-                }
+                } 
             }
-
             lucide.createIcons();
         }
 
-        function renderSetup() {
-            return `
-                <div class="min-h-screen flex items-center justify-center p-4 text-center">
-                    <div class="bg-black/40 backdrop-blur-md p-8 rounded-2xl border border-white/10 max-w-lg">
-                        <i data-lucide="github" class="w-12 h-12 text-white mx-auto mb-4"></i>
-                        <h1 class="text-xl font-bold text-white mb-2">GitHub Setup Required</h1>
-                        <p class="text-slate-400 text-sm mb-6">Open the code file and edit the <code>GITHUB_CONFIG</code> object at the top.</p>
-                        <div class="text-left bg-black/50 p-4 rounded text-xs font-mono text-cyan-400">
-                            const GITHUB_CONFIG = {<br>
-                            &nbsp;&nbsp;owner: "your-username",<br>
-                            &nbsp;&nbsp;repo: "your-repo-name",<br>
-                            &nbsp;&nbsp;...<br>
-                            }
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderNav() {
-            return `
-                <nav class="relative z-20 mx-4 mt-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg shadow-black/20">
-                    <div class="max-w-7xl mx-auto px-6">
-                        <div class="flex flex-col md:flex-row items-center justify-between min-h-[5rem] py-4 md:py-0 gap-4">
-                            <div class="flex items-center gap-3 cursor-pointer" onclick="setView('home')">
-                                <img src="iem.png" alt="KUET Logo" class="h-12 w-auto object-contain" />
-                                <span class="text-xl font-bold text-slate-200">KUET IEM'21</span>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <div class="hidden md:flex items-center gap-2 text-xs font-medium text-slate-400 bg-black/20 px-3 py-1 rounded-full border border-white/5">
-                                    <div class="w-2 h-2 rounded-full ${state.user ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-rose-400'}"></div>
-                                    ${state.user ? 'ADMIN ONLINE' : 'ONLINE'}
-                                </div>
-                                ${state.isAdmin 
-                                    ? `<button onclick="handleLogout()" class="px-4 py-2 text-xs font-bold text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-xl hover:bg-rose-500/20">LOGOUT</button>`
-                                    : `<button onclick="setView('login')" class="px-4 py-2 text-xs font-bold text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/20">ADMIN LOGIN</button>`
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </nav>
-            `;
-        }
-
-        function renderLogin() {
-            return `
-                <div class="flex justify-center items-center py-20 animate-fadeIn">
-                    <div class="w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-2xl">
-                        <div class="text-center mb-8">
-                            <div class="inline-block p-4 bg-cyan-500/10 rounded-full border border-cyan-500/20 mb-4"><i data-lucide="key" class="w-8 h-8 text-cyan-400"></i></div>
-                            <h2 class="text-2xl font-bold text-white">Admin Authentication</h2>
-                            <p class="text-sm text-slate-400 mt-2">Enter your GitHub Personal Access Token (PAT)</p>
-                        </div>
-                        <form onsubmit="handleLogin(event)" class="space-y-6">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 mb-2 ml-1">GITHUB TOKEN (repo scope)</label>
-                                <input name="token" type="password" class="w-full bg-black/40 border border-white/10 text-white p-4 rounded-xl focus:border-cyan-500/50 outline-none" placeholder="ghp_..." required />
-                            </div>
-                            <div class="flex gap-4">
-                                <button type="button" onclick="setView('home')" class="flex-1 py-3 rounded-xl text-sm font-bold text-slate-400 bg-white/5 hover:bg-white/10">CANCEL</button>
-                                <button type="submit" class="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:shadow-lg hover:shadow-cyan-500/20">VERIFY</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderAdmin() {
-            const f = state.adminForm;
-            // Calculate unique subjects from existing materials to populate the dropdown
-            const uniqueSubjects = [...new Set(state.materials.map(m => m.subject).filter(Boolean))].sort();
-
-            // Helper to render label with lock
-            const renderLabelWithLock = (label, field) => {
-                const isLocked = f.locked[field];
-                return `
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="text-xs font-bold ${isLocked ? 'text-amber-400' : 'text-slate-300'} ml-1">${label}</label>
-                        <button type="button" onclick="toggleLock('${field}')" class="focus:outline-none" title="${isLocked ? 'Unlock field' : 'Lock field to prevent reset'}">
-                            <i data-lucide="${isLocked ? 'lock' : 'unlock'}" class="w-3 h-3 ${isLocked ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'}"></i>
-                        </button>
-                    </div>
-                `;
-            };
-
-            // Group materials by category for Admin View
-            const groupedMaterials = state.materials.reduce((acc, item) => {
-                const cat = item.category || 'Uncategorized';
-                if (!acc[cat]) acc[cat] = [];
-                acc[cat].push(item);
-                return acc;
-            }, {});
-            const categories = Object.keys(groupedMaterials).sort();
-
-            return `
-                <div class="max-w-3xl mx-auto space-y-8 animate-fadeIn">
-                    <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl">
-                        <div class="flex items-center justify-between mb-8 border-b border-white/10 pb-6">
-                            <div class="flex items-center gap-4">
-                                <div class="p-3 rounded-xl shadow-lg ${f.id ? 'bg-amber-500/20 border border-amber-500/30' : 'bg-gradient-to-br from-emerald-500 to-green-600'}">
-                                    <i data-lucide="${f.id ? 'pencil' : 'upload'}" class="w-6 h-6 ${f.id ? 'text-amber-300' : 'text-white'}"></i>
-                                </div>
-                                <div>
-                                    <h2 class="text-xl font-bold text-white">${f.id ? 'Edit Material' : 'Upload Material'}</h2>
-                                    <p class="text-sm text-slate-400">${f.id ? 'Modify record.' : 'Add new resource.'}</p>
-                                </div>
-                            </div>
-                            ${f.id ? `<button onclick="cancelEdit()" class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-300 bg-white/5 rounded-full hover:bg-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i> CANCEL</button>` : ''}
-                        </div>
-
-                        <form onsubmit="handleAdminSubmit(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-1">
-                                ${renderLabelWithLock('ACADEMIC YEAR', 'year')}
-                                <select onchange="updateAdminForm('year', this.value)" class="w-full bg-black/20 border ${f.locked.year ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
-                                    ${YEARS.map(y => `<option value="${y}" class="bg-slate-900" ${f.year === y ? 'selected' : ''}>${y}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div class="space-y-1">
-                                ${renderLabelWithLock('SEMESTER', 'semester')}
-                                <select onchange="updateAdminForm('semester', this.value)" class="w-full bg-black/20 border ${f.locked.semester ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
-                                    ${SEMESTERS.map(s => `<option value="${s}" class="bg-slate-900" ${f.semester === s ? 'selected' : ''}>${s}</option>`).join('')}
-                                </select>
-                            </div>
-                            
-                            <!-- Modified Subject Input with Lock -->
-                            <div class="col-span-1 md:col-span-2 space-y-1">
-                                ${renderLabelWithLock('SUBJECT NAME', 'subject')}
-                                <input list="subject-options" value="${f.subject}" oninput="updateAdminForm('subject', this.value, false)" class="w-full bg-black/20 border ${f.locked.subject ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="Select existing or type new subject..." required />
-                                <datalist id="subject-options">
-                                    ${uniqueSubjects.map(s => `<option value="${s}">`).join('')}
-                                </datalist>
-                            </div>
-
-                            <div class="col-span-1 md:col-span-2 space-y-2">
-                                <label class="text-xs font-bold text-slate-300 ml-1">TOPIC NAME</label>
-                                <input value="${f.topic}" oninput="updateAdminForm('topic', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Kinematics" required />
-                            </div>
-                            <div class="col-span-1 md:col-span-2 space-y-1">
-                                ${renderLabelWithLock('INSTRUCTOR', 'teacher')}
-                                <input value="${f.teacher}" oninput="updateAdminForm('teacher', this.value, false)" class="w-full bg-black/20 border ${f.locked.teacher ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. Dr. A. Smith" required />
-                            </div>
-                            
-                            <!-- Modified Category Select to use handleCategoryChange -->
-                            <div class="space-y-1">
-                                ${renderLabelWithLock('CATEGORY', 'category')}
-                                <select onchange="handleCategoryChange(this.value)" class="w-full bg-black/20 border ${f.locked.category ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none">
-                                    ${CATEGORIES.map(c => `<option value="${c}" class="bg-slate-900" ${f.category === c ? 'selected' : ''}>${c}</option>`).join('')}
-                                </select>
-                            </div>
-                            
-                            <!-- Modified Section Select: Disabled if Books -->
-                            <div class="space-y-1">
-                                ${renderLabelWithLock('SECTION', 'part')}
-                                <select onchange="updateAdminForm('part', this.value)" 
-                                    class="w-full bg-black/20 border ${f.locked.part ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                                    ${f.category === 'Books' ? 'disabled' : ''}>
-                                    ${PARTS.map(p => `<option value="${p}" class="bg-slate-900" ${f.part === p ? 'selected' : ''}>${p}</option>`).join('')}
-                                </select>
-                            </div>
-
-                            <div class="col-span-1 md:col-span-2 pt-2 pb-2 border-t border-b border-white/5">
-                                <label class="text-xs font-bold text-slate-300 ml-1 mb-3 block">STORAGE METHOD</label>
-                                <div class="flex gap-4">
-                                    <button type="button" onclick="updateAdminForm('storageType', 'link')" class="flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${f.storageType === 'link' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50' : 'bg-black/20 text-slate-400 border border-white/5'}">
-                                        <i data-lucide="link"></i> Link
-                                    </button>
-                                    <button type="button" onclick="updateAdminForm('storageType', 'file')" class="flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${f.storageType === 'file' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50' : 'bg-black/20 text-slate-400 border border-white/5'}">
-                                        <i data-lucide="file-up"></i> Upload
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="col-span-1 md:col-span-2 space-y-2">
-                                ${f.storageType === 'link' ? `
-                                    <label class="text-xs font-bold text-slate-300 ml-1">LINK URL</label>
-                                    <div class="flex gap-2">
-                                        <div class="bg-black/20 p-3 rounded-full border border-white/10 flex items-center justify-center w-12 h-12"><i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i></div>
-                                        <!-- FIX: Added ', false' to prevent re-render on input -->
-                                        <input value="${f.link}" oninput="updateAdminForm('link', this.value, false)" type="url" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="https://..." />
-                                    </div>
-                                ` : `
-                                    <label class="text-xs font-bold text-slate-300 ml-1">FILE (Max 25MB)</label>
-                                    <div class="flex gap-2 items-center">
-                                        <div class="bg-black/20 p-3 rounded-full border border-white/10 flex items-center justify-center w-12 h-12 shrink-0"><i data-lucide="file-up" class="w-4 h-4 text-purple-400"></i></div>
-                                        <input type="file" onchange="handleFileSelect(event)" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-500/10 file:text-purple-300 hover:file:bg-purple-500/20 cursor-pointer" />
-                                    </div>
-                                    ${f.fileName ? `<p class="text-xs text-emerald-400 ml-2 mt-1">Selected: ${f.fileName}</p>` : ''}
-                                `}
-                            </div>
-
-                            <div class="col-span-1 md:col-span-2 mt-4">
-                                <button type="submit" ${f.status === 'UPLOADING' || f.status === 'UPDATING' ? 'disabled' : ''} 
-                                    class="w-full py-4 rounded-full text-sm font-bold shadow-lg transition-all flex justify-center items-center gap-2 ${f.status === 'SUCCESS' ? 'bg-emerald-500 text-white' : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'}">
-                                    ${f.status === 'IDLE' ? (f.id ? 'UPDATE MATERIAL' : 'INITIATE UPLOAD') : f.status}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl">
-                        <div class="flex items-center gap-4 mb-6 border-b border-white/10 pb-6">
-                            <div class="p-3 bg-indigo-500/20 rounded-xl border border-indigo-500/30"><i data-lucide="database" class="w-6 h-6 text-indigo-300"></i></div>
-                            <h2 class="text-xl font-bold text-white">Archives</h2>
-                        </div>
-                        
-                        <!-- CATEGORY-WISE ADMIN VIEW -->
-                        <div class="space-y-8 max-h-[600px] overflow-y-auto pr-2">
-                            ${categories.length === 0 ? '<p class="text-slate-500 text-center py-4">No archives found.</p>' : 
-                                categories.map(cat => `
-                                    <div class="animate-fadeIn">
-                                        <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3 border-b border-white/10 pb-1 sticky top-0 bg-[#1e293b]/90 backdrop-blur-md pt-2 z-10">${cat}</h3>
-                                        <div class="space-y-2">
-                                            ${groupedMaterials[cat].map(m => `
-                                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-black/40 rounded-lg border border-white/5 hover:border-white/10 transition-colors gap-3">
-                                                    <div class="w-full sm:w-auto">
-                                                        <h4 class="text-sm font-medium text-slate-200">${m.topic || m.subject}</h4>
-                                                        <div class="flex items-center gap-2 mt-1 text-xs text-slate-500">
-                                                            <span class="truncate max-w-[150px]">${m.subject}</span> • <span>${m.year}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex gap-2 w-full sm:w-auto justify-end">
-                                                        <button onclick="handleEdit('${m.id}')" class="p-2 rounded bg-slate-800 text-slate-400 hover:text-white transition-colors" title="Edit"><i data-lucide="pencil" class="w-3 h-3"></i></button>
-                                                        <button onclick="handleDelete('${m.id}')" class="p-2 rounded bg-rose-900/30 text-rose-400 hover:bg-rose-900/50 transition-colors" title="Delete"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
-                                                    </div>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    </div>
-                                `).join('')
-                            }
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderHome() {
-            const yearSemFiltered = state.materials.filter(m => {
-                const y = state.filterYear === 'All' || m.year === state.filterYear;
-                const s = state.filterSem === 'All' || m.semester === state.filterSem;
-                return y && s;
-            });
-
-            // Extract unique subjects
-            const availableSubjects = [...new Set(yearSemFiltered.map(m => m.subject || ''))].filter(Boolean).sort();
-
-            const finalFiltered = yearSemFiltered.filter(m => {
-                const subMatch = state.filterSubject === 'All' || m.subject === state.filterSubject;
-                // Added Category Matching Logic
-                const catMatch = state.filterCategory === 'All' || m.category === state.filterCategory;
-                
-                const q = state.searchSub.toLowerCase();
-                const searchMatch = !q || 
-                                    (m.subject && m.subject.toLowerCase().includes(q)) || 
-                                    (m.topic && m.topic.toLowerCase().includes(q)) || 
-                                    (m.teacher && m.teacher.toLowerCase().includes(q));
-                return subMatch && catMatch && searchMatch;
-            });
-
-            // Group materials by Subject
-            const groupedMaterials = finalFiltered.reduce((acc, item) => {
-                const subj = item.subject || 'Uncategorized';
-                if (!acc[subj]) acc[subj] = [];
-                acc[subj].push(item);
-                return acc;
-            }, {});
-
-            const sortedSubjects = Object.keys(groupedMaterials).sort();
-
-            return `
-                <div class="space-y-8 animate-fadeIn">
-                    <!-- Filter Bar -->
-                    <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-4 md:p-6 rounded-3xl shadow-xl relative z-30">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">YEAR</label>
-                                <div class="relative">
-                                    <select onchange="setFilter('filterYear', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none appearance-none cursor-pointer hover:border-cyan-500/30 transition-colors">
-                                        <option value="All" class="bg-black" ${state.filterYear === 'All' ? 'selected' : ''}>All Years</option>
-                                        ${YEARS.map(y => `<option value="${y}" class="bg-black" ${state.filterYear === y ? 'selected' : ''}>${y}</option>`).join('')}
-                                    </select>
-                                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEMESTER</label>
-                                <div class="relative">
-                                    <select onchange="setFilter('filterSem', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none appearance-none cursor-pointer hover:border-cyan-500/30 transition-colors">
-                                        <option value="All" class="bg-black" ${state.filterSem === 'All' ? 'selected' : ''}>All Semesters</option>
-                                        ${SEMESTERS.map(s => `<option value="${s}" class="bg-black" ${state.filterSem === s ? 'selected' : ''}>${s}</option>`).join('')}
-                                    </select>
-                                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SUBJECT</label>
-                                <div class="relative">
-                                    <select onchange="setFilter('filterSubject', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none appearance-none cursor-pointer hover:border-cyan-500/30 transition-colors" ${availableSubjects.length === 0 ? 'disabled' : ''}>
-                                        <option value="All" class="bg-black">All Subjects</option>
-                                        ${availableSubjects.map(sub => `<option value="${sub}" class="bg-black" ${state.filterSubject === sub ? 'selected' : ''}>${sub}</option>`).join('')}
-                                    </select>
-                                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
-                                </div>
-                            </div>
-                            
-                            <!-- Added Category Filter (Includes Books) -->
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">CATEGORY</label>
-                                <div class="relative">
-                                    <select onchange="setFilter('filterCategory', this.value)" class="w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none appearance-none cursor-pointer hover:border-cyan-500/30 transition-colors">
-                                        <option value="All" class="bg-black">All Categories</option>
-                                        ${CATEGORIES.map(c => `<option value="${c}" class="bg-black" ${state.filterCategory === c ? 'selected' : ''}>${c}</option>`).join('')}
-                                    </select>
-                                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEARCH</label>
-                                <div class="relative">
-                                    <input id="search-input" oninput="setFilter('searchSub', this.value)" value="${state.searchSub}" class="w-full bg-black border border-white/10 text-slate-200 h-12 pl-10 pr-4 rounded-full text-sm outline-none placeholder-slate-600 focus:border-cyan-500/30 transition-colors" placeholder="Topic, Subject, Teacher..." />
-                                    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Content Area -->
-                    ${state.loading ? `
-                        <div class="flex flex-col items-center justify-center py-32 opacity-70">
-                            <div class="relative">
-                                <div class="w-20 h-20 bg-cyan-500/20 rounded-full animate-ping absolute top-0 left-0"></div>
-                                <div class="w-20 h-20 bg-white/5 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center relative z-10"><i data-lucide="activity" class="w-8 h-8 text-cyan-400 animate-pulse"></i></div>
-                            </div>
-                            <p class="mt-6 text-sm font-medium tracking-widest text-cyan-200/70">LOADING ASSETS...</p>
-                        </div>
-                    ` : finalFiltered.length === 0 ? `
-                        <div class="flex flex-col items-center justify-center py-32 bg-white/5 border border-white/5 rounded-3xl border-dashed">
-                            <i data-lucide="database" class="w-16 h-16 text-slate-600 mb-4 opacity-50"></i>
-                            <p class="text-slate-500 font-medium">No materials found.</p>
-                            ${!state.user ? '<p class="text-xs text-slate-600 mt-2">(If you are Admin, check if Repository is Public)</p>' : ''}
-                        </div>
-                    ` : `
-                        <div class="space-y-12">
-                            ${sortedSubjects.map(subject => `
-                                <div class="animate-fadeIn">
-                                    <div class="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
-                                        <div class="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg border border-cyan-500/30">
-                                            <i data-lucide="book-open" class="w-5 h-5 text-cyan-400"></i>
-                                        </div>
-                                        <h2 class="text-2xl font-bold text-white tracking-wide">${subject}</h2>
-                                        <span class="text-xs font-medium text-slate-500 bg-white/5 px-2 py-1 rounded-full ml-auto">${groupedMaterials[subject].length} Resources</span>
-                                    </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        ${groupedMaterials[subject].map(m => renderCard(m)).join('')}
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    `}
-                </div>
-            `;
-        }
-
-        function renderCard(data) {
-            const isFile = !!data.fileData;
-            const safeData = isFile ? encodeURIComponent(data.fileData) : '';
-            const safeName = isFile ? encodeURIComponent(data.fileName || 'download') : '';
-            const displayTitle = data.topic || data.subject;
-            const displaySubtitle = data.topic ? data.subject : ''; 
-
-            return `
-                <div class="group relative flex flex-col bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:border-white/20 transition-all duration-500 hover:-translate-y-1">
-                    <div class="h-1 w-full opacity-70 group-hover:opacity-100 transition-opacity ${isFile ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500' : 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500'}"></div>
-                    
-                    <div class="p-6 flex-1">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-[10px] font-bold text-cyan-300 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20 uppercase tracking-wide">${data.category}</span>
-                        </div>
-                        
-                        <h3 class="text-lg font-bold text-white mb-1 group-hover:text-cyan-200 transition-colors line-clamp-1">${displayTitle}</h3>
-                        ${displaySubtitle ? `<p class="text-xs text-slate-400 mb-2 font-medium">${displaySubtitle}</p>` : ''}
-                        
-                        <div class="flex items-center gap-2 mb-6 mt-3">
-                            <div class="w-6 h-6 rounded-full bg-slate-700/50 flex items-center justify-center border border-white/10"><i data-lucide="user" class="w-3 h-3 text-slate-300"></i></div>
-                            <span class="text-sm text-slate-400 font-medium">${data.teacher}</span>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-black/20 rounded-xl p-2.5 border border-white/5">
-                                <span class="block text-slate-500 font-bold text-[9px] uppercase mb-0.5">Semester</span>
-                                <span class="text-xs text-slate-300 font-medium">${data.year} • ${data.semester.split(' ')[0]}</span>
-                            </div>
-                            <div class="bg-black/20 rounded-xl p-2.5 border border-white/5">
-                                <span class="block text-slate-500 font-bold text-[9px] uppercase mb-0.5">Segment</span>
-                                <span class="text-xs text-slate-300 font-medium">${data.part}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex border-t border-white/10 divide-x divide-white/10 bg-black/10">
-                        ${isFile 
-                            ? `<button onclick="handleDownload(decodeURIComponent('${safeData}'), decodeURIComponent('${safeName}'))" class="flex-1 p-4 flex items-center justify-center gap-2 text-sm font-medium text-purple-300 hover:bg-purple-500/10 transition-colors">
-                                <i data-lucide="database" class="w-4 h-4"></i> Retrieve
-                               </button>`
-                            : `<a href="${data.link}" target="_blank" class="flex-1 p-4 flex items-center justify-center gap-2 text-sm font-medium text-cyan-300 hover:bg-cyan-500/10 transition-colors">
-                                <i data-lucide="download" class="w-4 h-4"></i> Download
-                               </a>`
-                        }
-                    </div>
-                </div>
-            `;
-        }
+        function renderNeuralModal() { return ``; }
 
         // Initial Render
         init();
