@@ -661,5 +661,18 @@
     "link": "https://docs.google.com/presentation/d/1J24XoTo4JBPEd_a3zEZZZHuzdIH6Pr6Y/edit?usp=drive_link&ouid=102371481803203976363&rtpof=true&sd=true",
     "isFile": false,
     "createdAt": "2025-12-15T07:50:51.600Z"
+  },
+  {
+    "id": "64a373fd-bf10-4c54-9efe-6fb0027b79e4",
+    "year": "3rd Year",
+    "semester": "2nd Semester",
+    "subject": "Operation Research",
+    "topic": "Markov Chain",
+    "teacher": "Saiful Sir",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://docs.google.com/presentation/d/1ndk4P03fZIUT9NwqWV8mXp5RLmzMNOLz/edit?usp=drive_link&ouid=102371481803203976363&rtpof=true&sd=true",
+    "isFile": false,
+    "createdAt": "2025-12-15T07:51:04.851Z"
   }
 ]
