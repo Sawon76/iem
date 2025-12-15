@@ -635,5 +635,18 @@
     "link": "https://drive.google.com/file/d/1pAY_9AH19c8Q15ufICuevFnLS9VOOwfl/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-07T03:46:12.914Z"
+  },
+  {
+    "id": "54b24f7d-3821-4c6d-ab7e-684ff9110bef",
+    "year": "3rd Year",
+    "semester": "2nd Semester",
+    "subject": "Operation Research",
+    "topic": "Decision Analysis",
+    "teacher": "Saiful Sir",
+    "category": "Study Material",
+    "part": "Part B",
+    "link": "https://docs.google.com/presentation/d/1QbmXvj-ZTQUaehu39fWqTnmSOixfORvl/edit?usp=drive_link&ouid=102371481803203976363&rtpof=true&sd=true",
+    "isFile": false,
+    "createdAt": "2025-12-15T07:50:31.653Z"
   }
 ]
