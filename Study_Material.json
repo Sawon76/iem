@@ -700,5 +700,18 @@
     "link": "https://drive.google.com/file/d/1I3ek6AQuiH03alF0M98kMmgL_OkXBIUV/view?usp=drive_link",
     "isFile": false,
     "createdAt": "2025-12-21T17:09:13.788Z"
+  },
+  {
+    "id": "4ebe7e03-81b6-4c61-b415-3caaa340c0b5",
+    "year": "3rd Year",
+    "semester": "2nd Semester",
+    "subject": "Quality Management",
+    "topic": "Quality Management ",
+    "teacher": "Farjana Mam",
+    "category": "Study Material",
+    "part": "Part A",
+    "link": "https://drive.google.com/file/d/1BcwSk_yixmeFZVgioNZMh5AHnEGKoTyT/view?usp=drive_link",
+    "isFile": false,
+    "createdAt": "2025-12-21T17:10:21.090Z"
   }
 ]
