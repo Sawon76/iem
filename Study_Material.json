@@ -778,5 +778,18 @@
     "link": "https://drive.google.com/uc?export=download&id=17q4FiW7DTmidRR32VU5PT4mdH9vmfes_",
     "isFile": false,
     "createdAt": "2026-01-09T05:31:39.610Z"
+  },
+  {
+    "id": "cb47071c-8791-4c2d-8432-9e4a26b708cc",
+    "year": "3rd Year",
+    "semester": "2nd Semester",
+    "subject": "Operation Research",
+    "topic": "Operation Research Queuing theory",
+    "teacher": "Nazma Mam",
+    "category": "Study Material",
+    "part": "Part A",
+    "link": "https://drive.google.com/uc?export=download&id=1jxen44leoX6Qfdgxq8BclEZ3RbUwej5-",
+    "isFile": false,
+    "createdAt": "2026-01-09T05:32:13.085Z"
   }
 ]
