@@ -94,18 +94,6 @@
         const CATEGORIES = ['Study Material', 'Term Questions', 'CT Questions', 'Lab Manual', 'Books'];
         const DRIVE_TERMS = ['1st Term', '2nd Term'];
 
-        // --- CR DATA (EDIT THIS LIST) ---
-        const CR_DATA = [
-            { id: 1, year: '4th Year', section: 'A', name: 'Student Name', phone: '01xxxxxxxxx' },
-            { id: 2, year: '4th Year', section: 'B', name: 'Student Name', phone: '01xxxxxxxxx' },
-            { id: 3, year: '3rd Year', section: 'A', name: 'Student Name', phone: '01xxxxxxxxx' },
-            { id: 4, year: '3rd Year', section: 'B', name: 'Student Name', phone: '01xxxxxxxxx' },
-            { id: 5, year: '2nd Year', section: 'A', name: 'Student Name', phone: '01xxxxxxxxx' },
-            { id: 6, year: '2nd Year', section: 'B', name: 'Student Name', phone: '01xxxxxxxxx' },
-            { id: 7, year: '1st Year', section: 'A', name: 'Student Name', phone: '01xxxxxxxxx' },
-            { id: 8, year: '1st Year', section: 'B', name: 'Student Name', phone: '01xxxxxxxxx' },
-        ];
-
         const getCategoryStyles = (category) => {
             switch (category) {
                 case 'Study Material': return {
@@ -1179,16 +1167,15 @@
                     
                     <NoticeBoard />
 
-                    {/* Sticky Control Center (Hidden on scroll) */}
-                    <div className={`sticky top-6 z-30 transition-all duration-300 ${isScrolled ? 'opacity-0 -translate-y-4 pointer-events-none scale-95' : 'opacity-100 translate-y-0 scale-100'}`}>
-                         <div className="absolute inset-0 bg-[#0e1218]/70 backdrop-blur-xl rounded-[20px] shadow-2xl border border-white/10"></div>
-                         <div className="relative p-4 md:p-5">
+                    {/* Control Center - Now Relative (Scrolls naturally) */}
+                    <div className="relative z-30">
+                         <div className="bg-[#0e1218]/70 backdrop-blur-xl rounded-[20px] shadow-2xl border border-white/10 p-4 md:p-5">
                             {renderControlCenterContent(false)}
                          </div>
                     </div>
 
-                    {/* Floating Filter Button (Right Side) */}
-                    <div className={`fixed bottom-24 right-8 z-40 transition-all duration-500 ${isScrolled ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`}>
+                    {/* Floating Filter Button (Appears on scroll) */}
+                    <div className={`fixed bottom-24 right-8 z-40 transition-all duration-300 ${isScrolled ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`}>
                         <button 
                             onClick={() => setShowFilterModal(true)}
                             className="w-14 h-14 bg-[#151a22] hover:bg-[#1c2128] border border-white/10 rounded-full shadow-2xl flex items-center justify-center text-cyan-400 hover:text-white hover:scale-105 transition-all group backdrop-blur-xl"
@@ -1755,7 +1742,6 @@
             const [showDriveResultModal, setShowDriveResultModal] = useState(false);
             const [driveResults, setDriveResults] = useState([]);
             const [showSignatureModal, setShowSignatureModal] = useState(false);
-            const [showCRModal, setShowCRModal] = useState(false);
             const [showBookModal, setShowBookModal] = useState(false);
 
             // Fetch Data
@@ -1799,24 +1785,27 @@
 
             // Scroll Listener for Navbar and Back-to-Top
             useEffect(() => {
-                let lastY = window.scrollY;
-                
+                let lastScrollY = window.scrollY;
+
                 const handleScroll = () => {
-                    const currentY = window.scrollY;
-                    setScrolled(currentY > 300);
+                    const currentScrollY = window.scrollY;
+                    const scrollDiff = currentScrollY - lastScrollY;
                     
-                    // Navbar Logic: Hide on scroll down, show on scroll up (Mobile/Tablet behavior logic)
-                    if (currentY > 50) {
-                        if (currentY > lastY) {
-                            setNavVisible(false); // Scrolling down
+                    // Logic to Hide/Show Navbar based on scroll direction
+                    // If scrolling down AND past the top area (50px), hide navbar
+                    // If scrolling up, show navbar
+                    if (currentScrollY > 50) {
+                        if (scrollDiff > 0) {
+                            setNavVisible(false); // Scrolling Down
                         } else {
-                            setNavVisible(true);  // Scrolling up
+                            setNavVisible(true); // Scrolling Up
                         }
                     } else {
-                        setNavVisible(true);
+                        setNavVisible(true); // Always show at very top
                     }
-                    
-                    lastY = currentY;
+
+                    setScrolled(currentScrollY > 300);
+                    lastScrollY = currentScrollY;
                 };
 
                 window.addEventListener('scroll', handleScroll, { passive: true });
@@ -1992,10 +1981,6 @@
                                             <Book className="w-3.5 h-3.5 text-blue-400 group-hover:scale-110 transition-transform" />
                                             <span className="hidden sm:inline">Find Book</span>
                                         </button>
-                                        <button onClick={() => setShowCRModal(true)} className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-bold text-slate-300 bg-white/5 border border-white/5 rounded-lg hover:bg-white/10 hover:text-white transition-all group hover:border-white/10">
-                                            <Users className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
-                                            <span className="hidden sm:inline">CR List</span>
-                                        </button>
                                         <button onClick={() => setShowSignatureModal(true)} className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-bold text-slate-300 bg-white/5 border border-white/5 rounded-lg hover:bg-white/10 hover:text-white transition-all group hover:border-white/10">
                                             <PenTool className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
                                             <span className="hidden sm:inline">Signature</span>
@@ -2064,7 +2049,6 @@
                     {showDriveModal && <DriveFinderModal onClose={() => setShowDriveModal(false)} onSearch={handleDriveSearch} />}
                     {showDriveResultModal && <DriveResultModal results={driveResults} onClose={() => setShowDriveResultModal(false)} />}
                     {showSignatureModal && <SignatureModal onClose={() => setShowSignatureModal(false)} />}
-                    {showCRModal && <CRListModal onClose={() => setShowCRModal(false)} />}
                     {showBookModal && <BookSearchModal onClose={() => setShowBookModal(false)} />}
                 </>
             );
