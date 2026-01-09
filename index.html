@@ -12,7 +12,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -25,7 +25,7 @@
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
 
         /* Dropdown Option Styling */
-        select option { background-color: #000000 !important; color: #e2e8f0 !important; padding: 10px; }
+        select option { background-color: #0d1016 !important; color: #e2e8f0 !important; padding: 10px; }
 
         /* Grid Pattern Styles */
         .grid-pattern-container {
@@ -33,6 +33,7 @@
             transform: skewY(12deg); z-index: 0; pointer-events: none;
             mask-image: radial-gradient(600px circle at center, white, transparent);
             -webkit-mask-image: radial-gradient(600px circle at center, white, transparent);
+            opacity: 0.5;
         }
         
         /* Modal Animation */
@@ -40,7 +41,7 @@
         @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
-<body class="bg-black text-slate-200 selection:bg-cyan-500/30 selection:text-cyan-100 min-h-screen overflow-x-hidden relative">
+<body class="bg-[#0e1116] text-[#e7ecf3] selection:bg-cyan-500/30 selection:text-cyan-100 min-h-screen overflow-x-hidden relative" style="background: radial-gradient(circle at top, #1c2128, #0e1116);">
 
     <div class="grid-pattern-container"><canvas id="interactive-grid-canvas" class="w-full h-full"></canvas></div>
     <div id="root" class="relative z-10"></div>
@@ -112,7 +113,6 @@
         const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
         const SEMESTERS = ['1st Semester', '2nd Semester'];
         const CATEGORIES = ['Study Material', 'Term Questions', 'CT Questions', 'Lab Manual', 'Books'];
-        const PARTS = ['Part A', 'Part B', 'Both'];
         const DRIVE_TERMS = ['1st Term', '2nd Term'];
 
         // --- Utilities ---
@@ -125,13 +125,33 @@
         }
 
         function getCategoryStyles(category) {
+            // Gradient mappings based on the reference design
             switch(category) {
-                case 'Study Material': return { badge: 'text-cyan-300 bg-cyan-500/10 border-cyan-500/20', gradient: 'bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500', icon: 'text-cyan-400', textColor: 'text-cyan-200' };
-                case 'Term Questions': return { badge: 'text-purple-300 bg-purple-500/10 border-purple-500/20', gradient: 'bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500', icon: 'text-purple-400', textColor: 'text-purple-200' };
-                case 'CT Questions': return { badge: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20', gradient: 'bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-500', icon: 'text-emerald-400', textColor: 'text-emerald-200' };
-                case 'Lab Manual': return { badge: 'text-amber-300 bg-amber-500/10 border-amber-500/20', gradient: 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500', icon: 'text-amber-400', textColor: 'text-amber-200' };
-                case 'Books': return { badge: 'text-rose-300 bg-rose-500/10 border-rose-500/20', gradient: 'bg-gradient-to-r from-rose-500 via-red-500 to-rose-500', icon: 'text-rose-400', textColor: 'text-rose-200' };
-                default: return { badge: 'text-slate-300 bg-slate-500/10 border-slate-500/20', gradient: 'bg-gradient-to-r from-slate-500 via-gray-500 to-slate-500', icon: 'text-slate-400', textColor: 'text-slate-200' };
+                case 'Study Material': return { 
+                    emoji: '📖',
+                    btnGradient: 'bg-[linear-gradient(145deg,#ff8a3d,#d95c1e)]',
+                };
+                case 'Term Questions': return { 
+                    emoji: '🧾',
+                    btnGradient: 'bg-[linear-gradient(145deg,#22c55e,#15803d)]',
+                };
+                case 'CT Questions': return { 
+                    emoji: '📝',
+                    btnGradient: 'bg-[linear-gradient(145deg,#a78bfa,#6d28d9)]',
+                };
+                case 'Lab Manual': return { 
+                    emoji: '🧪',
+                    // Using a reddish gradient for Lab Manual as a distinct 5th color
+                    btnGradient: 'bg-[linear-gradient(145deg,#f43f5e,#be123c)]',
+                };
+                case 'Books': return { 
+                    emoji: '📚',
+                    btnGradient: 'bg-[linear-gradient(145deg,#3b82f6,#1d4ed8)]',
+                };
+                default: return { 
+                    emoji: '📁',
+                    btnGradient: 'bg-[linear-gradient(145deg,#64748b,#475569)]',
+                };
             }
         }
 
@@ -150,9 +170,11 @@
             filterSubject: 'All', 
             filterCategory: 'All',
             searchSub: '',
-            neuralTarget: null,
             
-            // New state for Floating Drive Finder
+            // Admin Search State
+            adminSearch: '',
+
+            // Floating Drive Finder State
             showDriveModal: false,
             showDriveResultModal: false,
             driveFinder: { year: YEARS[0], term: DRIVE_TERMS[0], results: [] },
@@ -170,13 +192,12 @@
                 topic: '', 
                 teacher: '',
                 category: 'Study Material',
-                part: 'Part A',
                 link: '',
                 storageType: 'link', 
                 fileData: null,
                 fileName: '',
                 status: 'IDLE',
-                locked: { year: false, semester: false, teacher: false, part: false, subject: false, category: false }
+                locked: { year: false, semester: false, teacher: false, subject: false, category: false }
             },
 
             driveForm: {
@@ -187,7 +208,7 @@
                 status: 'IDLE'
             },
             
-            // UI Modals (Replaces Alert/Confirm)
+            // UI Modals
             notification: { show: false, message: '', type: 'info' },
             confirmation: { show: false, message: '', onConfirm: null }
         };
@@ -302,6 +323,7 @@
             if (k === 'filterYear' || k === 'filterSem') state.filterSubject = 'All';
             render(); 
         };
+        window.setAdminSearch = (val) => { state.adminSearch = val; render(); };
         
         window.updateAdminForm = (k, v, shouldRender = true) => { state.adminForm[k] = v; if (shouldRender) render(); };
         window.updateDriveForm = (k, v, shouldRender = true) => { state.driveForm[k] = v; if (shouldRender) render(); };
@@ -331,7 +353,6 @@
 
         window.handleCategoryChange = (value) => {
             state.adminForm.category = value;
-            if (value === 'Books') state.adminForm.part = 'Both';
             render();
         };
 
@@ -417,7 +438,7 @@
                 const newItem = {
                     id: form.id || crypto.randomUUID(),
                     year: form.year, semester: form.semester, subject: form.subject, topic: form.topic || '', 
-                    teacher: form.teacher, category: form.category, part: form.part, link: downloadUrl,
+                    teacher: form.teacher, category: form.category, link: downloadUrl, 
                     isFile: form.storageType === 'file', createdAt: new Date().toISOString()
                 };
 
@@ -503,7 +524,7 @@
             state.adminForm = {
                 id: null, year: locks.year ? current.year : YEARS[0], semester: locks.semester ? current.semester : SEMESTERS[0], 
                 subject: locks.subject ? current.subject : '', topic: '', teacher: locks.teacher ? current.teacher : '', 
-                category: locks.category ? current.category : 'Study Material', part: locks.part ? current.part : 'Part A', 
+                category: locks.category ? current.category : 'Study Material', 
                 link: '', storageType: 'link', fileData: null, fileName: '', status: 'IDLE', locked: locks
             };
         }
@@ -511,15 +532,15 @@
         // --- Render Helpers ---
         function renderNav() {
             return `
-                <nav class="relative z-20 mx-4 mt-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg shadow-black/20">
+                <nav class="relative z-20 mx-4 mt-4 rounded-2xl bg-[#151a22] border border-white/5 shadow-lg shadow-black/20">
                     <div class="max-w-7xl mx-auto px-6">
                         <div class="flex flex-col md:flex-row items-center justify-between min-h-[5rem] py-4 md:py-0 gap-4">
                             <div class="flex items-center gap-3 cursor-pointer" onclick="setView('home')">
-                                <img src="iem.png" alt="KUET Logo" class="h-12 w-auto object-contain" />
+                                <img src="iem.png" alt="KUET Logo" class="h-12 w-auto object-contain" onerror="this.src='https://via.placeholder.com/150?text=KUET'"/>
                                 <span class="text-xl font-bold text-slate-200">KUET IEM Study Hub</span>
                             </div>
                             <div class="flex items-center gap-4">
-                                <button onclick="toggleSignatureModal()" class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-300 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:text-white transition-colors group">
+                                <button onclick="toggleSignatureModal()" class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-300 bg-[#0d1016] border border-white/10 rounded-xl hover:bg-white/5 hover:text-white transition-colors group">
                                     <i data-lucide="pen-tool" class="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform"></i>
                                     <span>Gmail Signature</span>
                                 </button>
@@ -531,8 +552,8 @@
                 </nav>
             `;
         }
-        function renderLogin() { return `<div class="flex justify-center items-center py-20 animate-fadeIn"><div class="w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-2xl"><div class="text-center mb-8"><div class="inline-block p-4 bg-cyan-500/10 rounded-full border border-cyan-500/20 mb-4"><i data-lucide="key" class="w-8 h-8 text-cyan-400"></i></div><h2 class="text-2xl font-bold text-white">Admin Authentication</h2></div><form onsubmit="handleLogin(event)" class="space-y-6"><div><label class="block text-xs font-bold text-slate-300 mb-2 ml-1">GITHUB TOKEN</label><input name="token" type="password" class="w-full bg-black/40 border border-white/10 text-white p-4 rounded-xl outline-none" required /></div><button type="submit" class="w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600">VERIFY</button></form></div></div>`; }
-        function renderFloatingButton() { return `<div class="fixed bottom-8 right-8 z-50 animate-fadeIn"><button onclick="toggleDriveModal()" class="w-auto h-14 px-6 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full shadow-lg shadow-purple-500/30 flex items-center justify-center text-white hover:scale-110 transition-transform group gap-2"><i data-lucide="hard-drive" class="w-6 h-6 group-hover:animate-bounce"></i><span class="text-xs font-bold">Drive</span></button></div>`; }
+        function renderLogin() { return `<div class="flex justify-center items-center py-20 animate-fadeIn"><div class="w-full max-w-md bg-[#151a22] border border-white/5 p-8 rounded-[18px] shadow-[0_20px_40px_rgba(0,0,0,0.6)]"><div class="text-center mb-8"><div class="inline-block p-4 bg-cyan-500/10 rounded-full border border-cyan-500/20 mb-4"><i data-lucide="key" class="w-8 h-8 text-cyan-400"></i></div><h2 class="text-2xl font-bold text-white">Admin Authentication</h2></div><form onsubmit="handleLogin(event)" class="space-y-6"><div><label class="block text-xs font-bold text-slate-300 mb-2 ml-1">GITHUB TOKEN</label><input name="token" type="password" class="w-full bg-[#0d1016] border border-white/10 text-white p-4 rounded-xl outline-none focus:border-cyan-500/50 transition-colors" required /></div><button type="submit" class="w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:brightness-110 transition-all">VERIFY</button></form></div></div>`; }
+        function renderFloatingButton() { return `<div class="fixed bottom-8 right-8 z-50 animate-fadeIn"><button onclick="toggleDriveModal()" class="w-auto h-14 px-6 bg-slate-700 hover:bg-slate-600 rounded-full shadow-lg shadow-black/40 flex items-center justify-center text-white hover:scale-110 transition-all group gap-2"><i data-lucide="hard-drive" class="w-6 h-6 group-hover:animate-bounce"></i><span class="text-xs font-bold">Drive</span></button></div>`; }
         
         function renderAdmin() {
             const f = state.adminForm;
@@ -540,36 +561,55 @@
             const renderLabelWithLock = (label, field) => { const isLocked = f.locked[field]; return `<div class="flex justify-between items-center mb-1"><label class="text-xs font-bold ${isLocked ? 'text-amber-400' : 'text-slate-300'} ml-1">${label}</label><button type="button" onclick="toggleLock('${field}')" class="focus:outline-none"><i data-lucide="${isLocked ? 'lock' : 'unlock'}" class="w-3 h-3 ${isLocked ? 'text-amber-400' : 'text-slate-600'}"></i></button></div>`; };
             const categories = Object.keys(state.materials.reduce((acc, item) => { const cat = item.category || 'Uncategorized'; if (!acc[cat]) acc[cat] = []; acc[cat].push(item); return acc; }, {})).sort();
 
-            // Logic to check if Lab Manual is selected to hide specific fields
             const isLabManual = f.category === 'Lab Manual';
+            const adminQuery = state.adminSearch.toLowerCase();
 
             return `
                 <div class="max-w-4xl mx-auto space-y-8 animate-fadeIn">
-                    <div class="flex justify-center mb-6"><div class="bg-black/30 p-1 rounded-full border border-white/10 flex"><button onclick="setAdminViewMode('materials')" class="px-6 py-2 rounded-full text-sm font-bold transition-all ${state.adminViewMode === 'materials' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow' : 'text-slate-400 hover:text-white'}">Study Materials</button><button onclick="setAdminViewMode('drives')" class="px-6 py-2 rounded-full text-sm font-bold transition-all ${state.adminViewMode === 'drives' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow' : 'text-slate-400 hover:text-white'}">Previous Year Drives</button></div></div>
+                    <div class="flex justify-center mb-6"><div class="bg-[#151a22] p-1 rounded-full border border-white/5 flex shadow-lg"><button onclick="setAdminViewMode('materials')" class="px-6 py-2 rounded-full text-sm font-bold transition-all ${state.adminViewMode === 'materials' ? 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 shadow' : 'text-slate-400 hover:text-white'}">Study Materials</button><button onclick="setAdminViewMode('drives')" class="px-6 py-2 rounded-full text-sm font-bold transition-all ${state.adminViewMode === 'drives' ? 'bg-purple-500/10 text-purple-300 border border-purple-500/20 shadow' : 'text-slate-400 hover:text-white'}">Previous Year Drives</button></div></div>
                     ${state.adminViewMode === 'materials' ? `
-                        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl">
+                        <div class="bg-[#151a22] border border-white/5 rounded-[18px] p-6 md:p-8 relative overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.6)]">
                             <div class="flex items-center justify-between mb-8 border-b border-white/10 pb-6"><div class="flex items-center gap-4"><div class="p-3 rounded-xl shadow-lg bg-gradient-to-br from-emerald-500 to-green-600"><i data-lucide="${f.id ? 'pencil' : 'upload'}" class="w-6 h-6 text-white"></i></div><div><h2 class="text-xl font-bold text-white">${f.id ? 'Edit Material' : 'Upload Material'}</h2><p class="text-sm text-slate-400">Add resources to the database.</p></div></div>${f.id ? `<button onclick="cancelEdit()" class="text-xs font-bold text-slate-300 hover:text-white flex gap-1"><i data-lucide="rotate-ccw" class="w-3 h-3"></i> CANCEL</button>` : ''}</div>
                             <form onsubmit="handleAdminSubmit(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="space-y-1">${renderLabelWithLock('ACADEMIC YEAR', 'year')}<select onchange="updateAdminForm('year', this.value)" class="w-full bg-black/20 border ${f.locked.year ? 'border-amber-500/30' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none">${YEARS.map(y => `<option value="${y}" class="bg-slate-900" ${f.year === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
-                                <div class="space-y-1">${renderLabelWithLock('SEMESTER', 'semester')}<select onchange="updateAdminForm('semester', this.value)" class="w-full bg-black/20 border ${f.locked.semester ? 'border-amber-500/30' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none">${SEMESTERS.map(s => `<option value="${s}" class="bg-slate-900" ${f.semester === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
-                                <div class="col-span-1 md:col-span-2 space-y-1">${renderLabelWithLock('SUBJECT NAME', 'subject')}<input list="subject-options" value="${f.subject}" oninput="updateAdminForm('subject', this.value, false)" class="w-full bg-black/20 border ${f.locked.subject ? 'border-amber-500/30' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none" required /><datalist id="subject-options">${uniqueSubjects.map(s => `<option value="${s}">`).join('')}</datalist></div>
+                                <div class="space-y-1">${renderLabelWithLock('ACADEMIC YEAR', 'year')}<select onchange="updateAdminForm('year', this.value)" class="w-full bg-[#0d1016] border ${f.locked.year ? 'border-amber-500/30' : 'border-white/10'} rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-white/20">${YEARS.map(y => `<option value="${y}" class="bg-[#0d1016]" ${f.year === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+                                <div class="space-y-1">${renderLabelWithLock('SEMESTER', 'semester')}<select onchange="updateAdminForm('semester', this.value)" class="w-full bg-[#0d1016] border ${f.locked.semester ? 'border-amber-500/30' : 'border-white/10'} rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-white/20">${SEMESTERS.map(s => `<option value="${s}" class="bg-[#0d1016]" ${f.semester === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+                                <div class="col-span-1 md:col-span-2 space-y-1">${renderLabelWithLock('SUBJECT NAME', 'subject')}<input list="subject-options" value="${f.subject}" oninput="updateAdminForm('subject', this.value, false)" class="w-full bg-[#0d1016] border ${f.locked.subject ? 'border-amber-500/30' : 'border-white/10'} rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-white/20" required /><datalist id="subject-options">${uniqueSubjects.map(s => `<option value="${s}">`).join('')}</datalist></div>
                                 
-                                ${!isLabManual ? `<div class="col-span-1 md:col-span-2 space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">TOPIC NAME</label><input value="${f.topic}" oninput="updateAdminForm('topic', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" required /></div>` : ''}
+                                ${!isLabManual ? `<div class="col-span-1 md:col-span-2 space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">TOPIC NAME</label><input value="${f.topic}" oninput="updateAdminForm('topic', this.value, false)" class="w-full bg-[#0d1016] border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-white/20" required /></div>` : ''}
                                 
-                                ${!isLabManual ? `<div class="col-span-1 md:col-span-2 space-y-1">${renderLabelWithLock('INSTRUCTOR', 'teacher')}<input value="${f.teacher}" oninput="updateAdminForm('teacher', this.value, false)" class="w-full bg-black/20 border ${f.locked.teacher ? 'border-amber-500/30' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none" required /></div>` : ''}
+                                ${!isLabManual ? `<div class="col-span-1 md:col-span-2 space-y-1">${renderLabelWithLock('INSTRUCTOR', 'teacher')}<input value="${f.teacher}" oninput="updateAdminForm('teacher', this.value, false)" class="w-full bg-[#0d1016] border ${f.locked.teacher ? 'border-amber-500/30' : 'border-white/10'} rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-white/20" required /></div>` : ''}
                                 
-                                <div class="space-y-1">${renderLabelWithLock('CATEGORY', 'category')}<select onchange="handleCategoryChange(this.value)" class="w-full bg-black/20 border ${f.locked.category ? 'border-amber-500/30' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none">${CATEGORIES.map(c => `<option value="${c}" class="bg-slate-900" ${f.category === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                                <div class="space-y-1">${renderLabelWithLock('CATEGORY', 'category')}<select onchange="handleCategoryChange(this.value)" class="w-full bg-[#0d1016] border ${f.locked.category ? 'border-amber-500/30' : 'border-white/10'} rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-white/20">${CATEGORIES.map(c => `<option value="${c}" class="bg-[#0d1016]" ${f.category === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
                                 
-                                ${!isLabManual ? `<div class="space-y-1">${renderLabelWithLock('SECTION', 'part')}<select onchange="updateAdminForm('part', this.value)" class="w-full bg-black/20 border ${f.locked.part ? 'border-amber-500/30' : 'border-white/10'} rounded-full px-4 py-3 text-sm text-slate-200 outline-none" ${f.category === 'Books' ? 'disabled' : ''}>${PARTS.map(p => `<option value="${p}" class="bg-slate-900" ${f.part === p ? 'selected' : ''}>${p}</option>`).join('')}</select></div>` : ''}
-                                
-                                <div class="col-span-1 md:col-span-2 pt-2 border-t border-white/5"><div class="flex gap-4 mb-2"><button type="button" onclick="updateAdminForm('storageType', 'link')" class="flex-1 py-2 text-xs font-bold rounded-lg border ${f.storageType === 'link' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'border-white/5'}">Link</button><button type="button" onclick="updateAdminForm('storageType', 'file')" class="flex-1 py-2 text-xs font-bold rounded-lg border ${f.storageType === 'file' ? 'bg-purple-500/20 text-purple-300 border-purple-500/50' : 'border-white/5'}">Upload</button></div>${f.storageType === 'link' ? `<input value="${f.link}" oninput="updateAdminForm('link', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="URL..." />` : `<input type="file" onchange="handleFileSelect(event)" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-500/10 file:text-purple-300" />`}</div>
-                                <button type="submit" ${f.status !== 'IDLE' ? 'disabled' : ''} class="col-span-1 md:col-span-2 w-full py-4 rounded-full text-sm font-bold shadow-lg transition-all flex justify-center items-center gap-2 ${f.status === 'SUCCESS' ? 'bg-emerald-500 text-white' : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'}">${f.status === 'IDLE' ? (f.id ? 'UPDATE MATERIAL' : 'INITIATE UPLOAD') : f.status}</button>
+                                <div class="col-span-1 md:col-span-2 pt-2 border-t border-white/5"><div class="flex gap-4 mb-2"><button type="button" onclick="updateAdminForm('storageType', 'link')" class="flex-1 py-2 text-xs font-bold rounded-lg border ${f.storageType === 'link' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'border-white/5'}">Link</button><button type="button" onclick="updateAdminForm('storageType', 'file')" class="flex-1 py-2 text-xs font-bold rounded-lg border ${f.storageType === 'file' ? 'bg-purple-500/20 text-purple-300 border-purple-500/50' : 'border-white/5'}">Upload</button></div>${f.storageType === 'link' ? `<input value="${f.link}" oninput="updateAdminForm('link', this.value, false)" class="w-full bg-[#0d1016] border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-white/20" placeholder="URL..." />` : `<input type="file" onchange="handleFileSelect(event)" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-500/10 file:text-purple-300" />`}</div>
+                                <button type="submit" ${f.status !== 'IDLE' ? 'disabled' : ''} class="col-span-1 md:col-span-2 w-full py-4 rounded-xl text-sm font-bold shadow-lg transition-all flex justify-center items-center gap-2 hover:brightness-110 ${f.status === 'SUCCESS' ? 'bg-emerald-500 text-white' : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'}">${f.status === 'IDLE' ? (f.id ? 'UPDATE MATERIAL' : 'INITIATE UPLOAD') : f.status}</button>
                             </form>
                         </div>
-                        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl"><h3 class="text-sm font-bold text-slate-400 mb-4 px-2 uppercase tracking-widest">Database Entries</h3><div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">${categories.map(cat => `<div><h4 class="text-xs font-bold text-cyan-400 mb-2">${cat}</h4>${state.materials.filter(m => m.category === cat).map(m => {const styles = getCategoryStyles(m.category); return `<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-black/40 rounded-lg border border-white/5 hover:border-white/10 transition-colors gap-3"><div class="w-full sm:w-auto"><h4 class="text-sm font-medium text-slate-200">${m.topic || m.subject}</h4><div class="flex items-center gap-2 mt-1 text-xs text-slate-500"><span class="truncate max-w-[150px]">${m.subject}</span><span class="${styles.badge} px-1.5 py-0.5 rounded text-[10px] border">${m.category}</span><span>• ${m.year}</span></div></div><div class="flex gap-2 w-full sm:w-auto justify-end"><button onclick="handleEdit('${m.id}')" class="p-2 rounded bg-slate-800 text-slate-400 hover:text-white transition-colors"><i data-lucide="pencil" class="w-3 h-3"></i></button><button onclick="handleDelete('${m.id}')" class="p-2 rounded bg-rose-900/30 text-rose-400 hover:bg-rose-900/50 transition-colors"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>`}).join('')}</div>`).join('')}</div></div>
+                        <div class="bg-[#151a22] border border-white/5 rounded-[18px] p-6 relative overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.6)]">
+                            <div class="flex items-center justify-between mb-4 px-2">
+                                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Database Entries</h3>
+                                <div class="relative w-48">
+                                    <input type="text" placeholder="Search..." value="${state.adminSearch}" oninput="setAdminSearch(this.value)" class="w-full bg-[#0d1016] border border-white/10 rounded-full pl-8 pr-3 py-1.5 text-xs text-white outline-none focus:border-cyan-500/30">
+                                    <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500"></i>
+                                </div>
+                            </div>
+                            <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                                ${categories.map(cat => {
+                                    const filteredItems = state.materials.filter(m => m.category === cat && (
+                                        !adminQuery || 
+                                        (m.subject && m.subject.toLowerCase().includes(adminQuery)) || 
+                                        (m.topic && m.topic.toLowerCase().includes(adminQuery)) ||
+                                        (m.teacher && m.teacher.toLowerCase().includes(adminQuery))
+                                    ));
+                                    if(filteredItems.length === 0) return '';
+                                    return `<div><h4 class="text-xs font-bold text-cyan-400 mb-2 sticky top-0 bg-[#151a22]/95 backdrop-blur py-1 z-10">${cat}</h4>${filteredItems.map(m => {const styles = getCategoryStyles(m.category); return `<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-[linear-gradient(145deg,#151a22,#0d1016)] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] rounded-[18px] border border-white/5 hover:border-white/10 transition-colors gap-3"><div class="w-full sm:w-auto"><h4 class="text-sm font-medium text-slate-200">${m.topic || m.subject}</h4><div class="flex items-center gap-2 mt-1 text-xs text-slate-500"><span class="truncate max-w-[150px]">${m.subject}</span><span class="px-1.5 py-0.5 rounded text-[10px] border border-white/10">${m.category}</span><span>• ${m.year}</span></div></div><div class="flex gap-2 w-full sm:w-auto justify-end"><button onclick="handleEdit('${m.id}')" class="p-2 rounded bg-slate-800 text-slate-400 hover:text-white transition-colors"><i data-lucide="pencil" class="w-3 h-3"></i></button><button onclick="handleDelete('${m.id}')" class="p-2 rounded bg-rose-900/30 text-rose-400 hover:bg-rose-900/50 transition-colors"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>`}).join('')}</div>`
+                                }).join('')}
+                                ${state.materials.length === 0 ? '<p class="text-center text-xs text-slate-500 py-4">No materials uploaded yet.</p>' : ''}
+                            </div>
+                        </div>
                     ` : `
-                        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl"><div class="flex items-center gap-4 mb-8 border-b border-white/10 pb-6"><div class="p-3 rounded-xl shadow-lg bg-gradient-to-br from-purple-500 to-pink-600"><i data-lucide="hard-drive" class="w-6 h-6 text-white"></i></div><div><h2 class="text-xl font-bold text-white">Add Drive Link</h2><p class="text-sm text-slate-400">Previous year questions & resources.</p></div></div><form onsubmit="handleDriveSubmit(event)" class="grid grid-cols-1 gap-6"><div class="space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">BATCH NAME</label><input value="${state.driveForm.batch}" oninput="updateDriveForm('batch', this.value, false)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="e.g. IEM 2k19" required /></div><div class="grid grid-cols-2 gap-4"><div class="space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">YEAR</label><select onchange="updateDriveForm('year', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none">${YEARS.map(y => `<option value="${y}" class="bg-slate-900" ${state.driveForm.year === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div class="space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">TERM</label><select onchange="updateDriveForm('term', this.value)" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none">${DRIVE_TERMS.map(t => `<option value="${t}" class="bg-slate-900" ${state.driveForm.term === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div></div><div class="space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">DRIVE URL</label><input value="${state.driveForm.link}" oninput="updateDriveForm('link', this.value, false)" type="url" class="w-full bg-black/20 border border-white/10 rounded-full px-4 py-3 text-sm text-slate-200 outline-none" placeholder="https://drive.google.com..." required /></div><button type="submit" ${state.driveForm.status !== 'IDLE' ? 'disabled' : ''} class="w-full py-4 rounded-full text-sm font-bold shadow-lg transition-all flex justify-center items-center gap-2 ${state.driveForm.status === 'SUCCESS' ? 'bg-emerald-500 text-white' : 'bg-gradient-to-r from-purple-500 to-pink-600 text-white'}">${state.driveForm.status === 'IDLE' ? 'ADD DRIVE LINK' : state.driveForm.status}</button></form></div>
-                        <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl"><h3 class="text-sm font-bold text-slate-400 mb-4 px-2 uppercase tracking-widest">Active Links</h3><div class="space-y-3 max-h-[400px] overflow-y-auto pr-2">${state.driveLinks.length === 0 ? '<p class="text-slate-500 text-center">No links added.</p>' : state.driveLinks.map(l => `<div class="flex items-center justify-between p-3 bg-black/30 rounded-xl border border-white/5"><div><div class="font-bold text-slate-200 text-sm">${l.batch}</div><div class="text-xs text-slate-500">${l.year} • ${l.term}</div></div><button onclick="handleDeleteDriveLink('${l.id}')" class="p-2 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('')}</div></div>
+                        <div class="bg-[#151a22] border border-white/5 rounded-[18px] p-6 md:p-8 relative overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.6)]"><div class="flex items-center gap-4 mb-8 border-b border-white/10 pb-6"><div class="p-3 rounded-xl shadow-lg bg-gradient-to-br from-purple-500 to-pink-600"><i data-lucide="hard-drive" class="w-6 h-6 text-white"></i></div><div><h2 class="text-xl font-bold text-white">Add Drive Link</h2><p class="text-sm text-slate-400">Previous year questions & resources.</p></div></div><form onsubmit="handleDriveSubmit(event)" class="grid grid-cols-1 gap-6"><div class="space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">BATCH NAME</label><input value="${state.driveForm.batch}" oninput="updateDriveForm('batch', this.value, false)" class="w-full bg-[#0d1016] border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-white/20" placeholder="e.g. IEM 2k19" required /></div><div class="grid grid-cols-2 gap-4"><div class="space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">YEAR</label><select onchange="updateDriveForm('year', this.value)" class="w-full bg-[#0d1016] border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-white/20">${YEARS.map(y => `<option value="${y}" class="bg-[#0d1016]" ${state.driveForm.year === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div class="space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">TERM</label><select onchange="updateDriveForm('term', this.value)" class="w-full bg-[#0d1016] border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-white/20">${DRIVE_TERMS.map(t => `<option value="${t}" class="bg-[#0d1016]" ${state.driveForm.term === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div></div><div class="space-y-2"><label class="text-xs font-bold text-slate-300 ml-1">DRIVE URL</label><input value="${state.driveForm.link}" oninput="updateDriveForm('link', this.value, false)" type="url" class="w-full bg-[#0d1016] border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-white/20" placeholder="https://drive.google.com..." required /></div><button type="submit" ${state.driveForm.status !== 'IDLE' ? 'disabled' : ''} class="w-full py-4 rounded-xl text-sm font-bold shadow-lg transition-all flex justify-center items-center gap-2 hover:brightness-110 ${state.driveForm.status === 'SUCCESS' ? 'bg-emerald-500 text-white' : 'bg-gradient-to-r from-purple-500 to-pink-600 text-white'}">${state.driveForm.status === 'IDLE' ? 'ADD DRIVE LINK' : state.driveForm.status}</button></form></div>
+                        <div class="bg-[#151a22] border border-white/5 rounded-[18px] p-6 relative overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.6)]"><h3 class="text-sm font-bold text-slate-400 mb-4 px-2 uppercase tracking-widest">Active Links</h3><div class="space-y-3 max-h-[400px] overflow-y-auto pr-2">${state.driveLinks.length === 0 ? '<p class="text-slate-500 text-center">No links added.</p>' : state.driveLinks.map(l => `<div class="flex items-center justify-between p-3 bg-[#0d1016] rounded-xl border border-white/5"><div><div class="font-bold text-slate-200 text-sm">${l.batch}</div><div class="text-xs text-slate-500">${l.year} • ${l.term}</div></div><button onclick="handleDeleteDriveLink('${l.id}')" class="p-2 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('')}</div></div>
                     `}
                 </div>
             `;
@@ -608,13 +648,13 @@
 
             return `
                 <div class="space-y-8 animate-fadeIn">
-                    <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-4 md:p-6 rounded-3xl shadow-xl relative z-30">
+                    <div class="bg-[#151a22] border border-white/5 p-4 md:p-6 rounded-[18px] shadow-[0_20px_40px_rgba(0,0,0,0.6)] relative z-30">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
-                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">YEAR</label><div class="relative"><select onchange="setFilter('filterYear', this.value)" class="appearance-none w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none cursor-pointer hover:border-cyan-500/30 transition-colors"><option value="All" class="bg-black" ${state.filterYear === 'All' ? 'selected' : ''}>All Years</option>${YEARS.map(y => `<option value="${y}" class="bg-black" ${state.filterYear === y ? 'selected' : ''}>${y}</option>`).join('')}</select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
-                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEMESTER</label><div class="relative"><select onchange="setFilter('filterSem', this.value)" class="appearance-none w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none cursor-pointer hover:border-cyan-500/30 transition-colors"><option value="All" class="bg-black" ${state.filterSem === 'All' ? 'selected' : ''}>All Semesters</option>${SEMESTERS.map(s => `<option value="${s}" class="bg-black" ${state.filterSem === s ? 'selected' : ''}>${s}</option>`).join('')}</select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
-                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SUBJECT</label><div class="relative"><select onchange="setFilter('filterSubject', this.value)" class="appearance-none w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none cursor-pointer hover:border-cyan-500/30 transition-colors" ${availableSubjects.length === 0 ? 'disabled' : ''}><option value="All" class="bg-black">All Subjects</option>${availableSubjects.map(sub => `<option value="${sub}" class="bg-black" ${state.filterSubject === sub ? 'selected' : ''}>${sub}</option>`).join('')}</select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
-                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">CATEGORY</label><div class="relative"><select onchange="setFilter('filterCategory', this.value)" class="appearance-none w-full bg-black border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none cursor-pointer hover:border-cyan-500/30 transition-colors"><option value="All" class="bg-black">All Categories</option>${CATEGORIES.map(c => `<option value="${c}" class="bg-black" ${state.filterCategory === c ? 'selected' : ''}>${c}</option>`).join('')}</select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
-                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEARCH</label><div class="relative"><input id="search-input" oninput="setFilter('searchSub', this.value)" value="${state.searchSub}" class="w-full bg-black border border-white/10 text-slate-200 h-12 pl-10 pr-4 rounded-full text-sm outline-none placeholder-slate-600 focus:border-cyan-500/30 transition-colors" placeholder="Topic, Subject..." /><i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
+                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">YEAR</label><div class="relative"><select onchange="setFilter('filterYear', this.value)" class="appearance-none w-full bg-[#0d1016] border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none cursor-pointer hover:border-cyan-500/30 transition-colors"><option value="All" class="bg-[#0d1016]" ${state.filterYear === 'All' ? 'selected' : ''}>All Years</option>${YEARS.map(y => `<option value="${y}" class="bg-[#0d1016]" ${state.filterYear === y ? 'selected' : ''}>${y}</option>`).join('')}</select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
+                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEMESTER</label><div class="relative"><select onchange="setFilter('filterSem', this.value)" class="appearance-none w-full bg-[#0d1016] border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none cursor-pointer hover:border-cyan-500/30 transition-colors"><option value="All" class="bg-[#0d1016]" ${state.filterSem === 'All' ? 'selected' : ''}>All Semesters</option>${SEMESTERS.map(s => `<option value="${s}" class="bg-[#0d1016]" ${state.filterSem === s ? 'selected' : ''}>${s}</option>`).join('')}</select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
+                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SUBJECT</label><div class="relative"><select onchange="setFilter('filterSubject', this.value)" class="appearance-none w-full bg-[#0d1016] border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none cursor-pointer hover:border-cyan-500/30 transition-colors" ${availableSubjects.length === 0 ? 'disabled' : ''}><option value="All" class="bg-[#0d1016]">All Subjects</option>${availableSubjects.map(sub => `<option value="${sub}" class="bg-[#0d1016]" ${state.filterSubject === sub ? 'selected' : ''}>${sub}</option>`).join('')}</select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
+                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">CATEGORY</label><div class="relative"><select onchange="setFilter('filterCategory', this.value)" class="appearance-none w-full bg-[#0d1016] border border-white/10 text-slate-200 h-12 px-4 pr-10 rounded-full text-sm outline-none cursor-pointer hover:border-cyan-500/30 transition-colors"><option value="All" class="bg-[#0d1016]">All Categories</option>${CATEGORIES.map(c => `<option value="${c}" class="bg-[#0d1016]" ${state.filterCategory === c ? 'selected' : ''}>${c}</option>`).join('')}</select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
+                            <div><label class="block text-[10px] font-bold text-slate-400 mb-2 ml-1">SEARCH</label><div class="relative"><input id="search-input" oninput="setFilter('searchSub', this.value)" value="${state.searchSub}" class="w-full bg-[#0d1016] border border-white/10 text-slate-200 h-12 pl-10 pr-4 rounded-full text-sm outline-none placeholder-slate-600 focus:border-cyan-500/30 transition-colors" placeholder="Topic, Subject..." /><i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i></div></div>
                         </div>
                     </div>
 
@@ -622,7 +662,7 @@
                       `
                       <!-- RECENT UPLOADS SECTION -->
                       ${recentMaterials.length > 0 && state.filterSubject === 'All' && state.searchSub === '' ? `
-                          <div class="bg-white/5 border-2 border-dashed border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden">
+                          <div class="bg-[#151a22] border-2 border-dashed border-white/10 rounded-[18px] p-6 md:p-8 relative overflow-hidden">
                               <div class="flex items-center gap-3 mb-6">
                                   <div class="p-2 bg-gradient-to-br from-amber-500/20 to-orange-600/20 rounded-lg border border-amber-500/30">
                                       <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
@@ -642,9 +682,9 @@
                                   <div class="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
                                       <div class="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg border border-cyan-500/30"><i data-lucide="book-open" class="w-5 h-5 text-cyan-400"></i></div>
                                       <h2 class="text-2xl font-bold text-white tracking-wide">${subject}</h2>
-                                      <span class="text-xs font-medium text-slate-500 bg-white/5 px-2 py-1 rounded-full ml-auto">${groupedMaterials[subject].length} Resources</span>
+                                      <span class="text-xs font-medium text-slate-500 bg-[#0d1016] border border-white/5 px-2 py-1 rounded-full ml-auto">${groupedMaterials[subject].length} Resources</span>
                                   </div>
-                                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${groupedMaterials[subject].map(m => renderCard(m)).join('')}</div>
+                                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">${groupedMaterials[subject].map(m => renderCard(m)).join('')}</div>
                               </div>
                           `).join('')}
                       </div>`}
@@ -658,50 +698,37 @@
             const isFile = !!data.fileData;
             const safeData = isFile ? encodeURIComponent(data.fileData) : '';
             const safeName = isFile ? encodeURIComponent(data.fileName || 'download') : '';
-            const displayTitle = data.topic || data.subject;
-            const displaySubtitle = data.topic ? data.subject : ''; 
-            const styles = getCategoryStyles(data.category);
+            const displayTitle = data.topic || data.subject; 
+            const fullTitle = data.topic ? `${data.subject}: ${data.topic}` : data.subject;
 
-            // Compact vs Normal Styles
-            const p = isCompact ? 'p-3' : 'p-6';
-            const titleClass = isCompact ? 'text-sm' : 'text-lg';
-            const subTitleClass = isCompact ? 'text-[10px]' : 'text-xs';
-            const btnP = isCompact ? 'p-2' : 'p-4';
-            const iconSize = isCompact ? 'w-3 h-3' : 'w-4 h-4';
-            const badgeClass = isCompact ? 'text-[9px] px-2 py-0.5' : 'text-[10px] px-3 py-1';
-            
-            // Safe Access for semester
-            const semShort = data.semester ? data.semester.split(' ')[0] : 'N/A';
+            const styles = getCategoryStyles(data.category);
+            const semShort = data.semester ? data.semester : 'N/A';
+            const yearShort = data.year ? data.year : 'N/A';
 
             return `
-                <div class="group relative flex flex-col bg-white/5 backdrop-blur-md border border-white/10 ${isCompact ? 'rounded-xl' : 'rounded-2xl'} overflow-hidden hover:bg-white/10 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:border-white/20 transition-all duration-500 hover:-translate-y-1">
-                    <div class="h-1 w-full opacity-70 group-hover:opacity-100 transition-opacity ${styles.gradient}"></div>
-                    <div class="${p} flex-1">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="${badgeClass} font-bold rounded-full border uppercase tracking-wide ${styles.badge}">${data.category}</span>
-                             ${isCompact ? `<span class="text-[10px] text-slate-500 font-mono">${new Date(data.createdAt).toLocaleDateString(undefined, {month:'short', day:'numeric'})}</span>` : ''} 
-                        </div>
-                        
-                        <h3 class="${titleClass} font-bold text-white mb-0.5 group-hover:${styles.textColor} transition-colors line-clamp-1" title="${displayTitle}">${displayTitle}</h3>
-                        ${displaySubtitle ? `<p class="${subTitleClass} text-slate-400 mb-2 font-medium truncate">${displaySubtitle}</p>` : ''}
-                        
-                        <div class="flex items-center gap-2 ${isCompact ? 'mb-0' : 'mb-6 mt-3'}">
-                            <div class="${isCompact ? 'w-4 h-4' : 'w-6 h-6'} rounded-full bg-slate-700/50 flex items-center justify-center border border-white/10">
-                                <i data-lucide="user" class="${isCompact ? 'w-2 h-2' : 'w-3 h-3'} text-slate-300"></i>
-                            </div>
-                            <span class="${isCompact ? 'text-xs' : 'text-sm'} text-slate-400 font-medium truncate">${data.teacher}</span>
-                        </div>
-
-                        ${!isCompact ? `
-                        <div class="grid grid-cols-2 gap-3 mt-4">
-                            <div class="bg-black/20 rounded-xl p-2.5 border border-white/5"><span class="block text-slate-500 font-bold text-[9px] uppercase mb-0.5">Semester</span><span class="text-xs text-slate-300 font-medium">${data.year} • ${semShort}</span></div>
-                            <div class="bg-black/20 rounded-xl p-2.5 border border-white/5"><span class="block text-slate-500 font-bold text-[9px] uppercase mb-0.5">Segment</span><span class="text-xs text-slate-300 font-medium">${data.part}</span></div>
-                        </div>` : ''}
+                <div class="relative flex flex-col bg-[linear-gradient(145deg,#151a22,#0d1016)] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] rounded-[18px] p-[26px] hover:-translate-y-1 transition-transform duration-300">
+                    
+                    <!-- Header -->
+                    <div class="flex items-center gap-[14px] mb-[12px]">
+                        <div class="text-[42px] leading-none select-none">${styles.emoji}</div>
+                        <div class="text-[24px] font-semibold text-[#e7ecf3] leading-tight tracking-tight">${data.category}</div>
                     </div>
-                    <div class="flex border-t border-white/10 divide-x divide-white/10 bg-black/10">
+
+                    <!-- Divider -->
+                    <div class="h-px bg-white/10 my-[14px]"></div>
+
+                    <!-- Content Rows -->
+                    <div class="text-[15px] text-[#e7ecf3] opacity-90 mb-[6px] font-normal">${yearShort} | ${semShort}</div>
+                    <div class="text-[15px] text-[#e7ecf3] font-medium mb-[6px] line-clamp-2" title="${fullTitle}">${fullTitle}</div>
+                    <div class="text-[15px] text-[#aab1bc] mt-[4px] truncate">Prof. ${data.teacher}</div>
+
+                    <!-- Footer -->
+                    <div class="flex justify-between items-center mt-[18px]">
+                        <div class="text-[13px] text-[#9aa3ad]">Uploaded on: ${new Date(data.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                        
                         ${isFile 
-                            ? `<button onclick="handleDownload(decodeURIComponent('${safeData}'), decodeURIComponent('${safeName}'))" class="flex-1 ${btnP} flex items-center justify-center gap-2 text-xs font-medium ${styles.icon} hover:bg-white/5 transition-colors"><i data-lucide="database" class="${iconSize}"></i> ${isCompact ? 'Get' : 'Retrieve'}</button>`
-                            : `<a href="${data.link}" target="_blank" class="flex-1 ${btnP} flex items-center justify-center gap-2 text-xs font-medium text-cyan-300 hover:bg-white/5 transition-colors"><i data-lucide="download" class="${iconSize}"></i> ${isCompact ? 'Get' : 'Download'}</a>`
+                            ? `<button onclick="handleDownload(decodeURIComponent('${safeData}'), decodeURIComponent('${safeName}'))" class="border-none py-[10px] px-[18px] rounded-[8px] font-semibold text-white cursor-pointer flex gap-[8px] items-center hover:brightness-115 transition-all ${styles.btnGradient}">⬇ Retrieve</button>`
+                            : `<a href="${data.link}" target="_blank" class="border-none py-[10px] px-[18px] rounded-[8px] font-semibold text-white cursor-pointer flex gap-[8px] items-center hover:brightness-115 transition-all ${styles.btnGradient}">⬇ Download</a>`
                         }
                     </div>
                 </div>
@@ -710,7 +737,7 @@
         
         function renderDriveFinderModal() {
             const { year, term } = state.driveFinder;
-            return `<div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"><div class="w-full max-w-sm bg-slate-900 border border-purple-500/30 rounded-3xl shadow-2xl overflow-hidden relative"><div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500"></div><button onclick="toggleDriveModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button><div class="p-8 text-center"><div class="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-purple-500/20"><i data-lucide="search" class="w-8 h-8 text-purple-400"></i></div><h2 class="text-2xl font-bold text-white mb-2">Find Archives</h2><p class="text-sm text-slate-400 mb-8">Select session details below</p><div class="space-y-4 mb-8 text-left"><div><label class="text-xs font-bold text-slate-500 ml-1">YEAR</label><select onchange="updateDriveFinder('year', this.value)" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-purple-500/50">${YEARS.map(y => `<option value="${y}" class="bg-slate-900" ${year === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div><label class="text-xs font-bold text-slate-500 ml-1">TERM</label><select onchange="updateDriveFinder('term', this.value)" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-purple-500/50">${DRIVE_TERMS.map(t => `<option value="${t}" class="bg-slate-900" ${term === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div></div><button onclick="findDriveLink()" class="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">SHOW DRIVE <i data-lucide="arrow-right" class="w-4 h-4"></i></button></div></div></div>`;
+            return `<div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"><div class="w-full max-w-sm bg-slate-900 border border-purple-500/30 rounded-3xl shadow-2xl overflow-hidden relative"><div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500"></div><button onclick="toggleDriveModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button><div class="p-8 text-center"><div class="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-purple-500/20"><i data-lucide="search" class="w-8 h-8 text-purple-400"></i></div><h2 class="text-2xl font-bold text-white mb-2">Find Archives</h2><p class="text-sm text-slate-400 mb-8">Select session details below</p><div class="space-y-4 mb-8 text-left"><div><label class="text-xs font-bold text-slate-500 ml-1">YEAR</label><select onchange="updateDriveFinder('year', this.value)" class="w-full bg-[#0d1016] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-purple-500/50">${YEARS.map(y => `<option value="${y}" class="bg-[#0d1016]" ${year === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div><label class="text-xs font-bold text-slate-500 ml-1">TERM</label><select onchange="updateDriveFinder('term', this.value)" class="w-full bg-[#0d1016] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-purple-500/50">${DRIVE_TERMS.map(t => `<option value="${t}" class="bg-[#0d1016]" ${term === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div></div><button onclick="findDriveLink()" class="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">SHOW DRIVE <i data-lucide="arrow-right" class="w-4 h-4"></i></button></div></div></div>`;
         }
 
         function renderDriveResultModal() {
