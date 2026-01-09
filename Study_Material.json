@@ -752,5 +752,18 @@
     "link": "https://drive.google.com/uc?export=download&id=1Z3sVMQiQEEDsZwLZZiaxxEqOSVtMXmab",
     "isFile": false,
     "createdAt": "2025-12-24T07:50:16.487Z"
+  },
+  {
+    "id": "f263e8e0-9e63-443d-8d5e-d5b2296b6b0e",
+    "year": "3rd Year",
+    "semester": "2nd Semester",
+    "subject": "Operation Research",
+    "topic": "LP formulations",
+    "teacher": "Nazma Mam",
+    "category": "Study Material",
+    "part": "Part A",
+    "link": "https://drive.google.com/uc?export=download&id=175GWisLaCxAViq3NzBIgRCUG90wBoDOx",
+    "isFile": false,
+    "createdAt": "2026-01-09T05:31:02.964Z"
   }
 ]
