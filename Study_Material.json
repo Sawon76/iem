@@ -804,5 +804,18 @@
     "link": "https://drive.google.com/uc?export=download&id=1ZHl8H2z4bzKnnjwkFTEk6c6VbehMw8pV",
     "isFile": false,
     "createdAt": "2026-01-09T05:34:32.990Z"
+  },
+  {
+    "id": "d2b1cda1-0c80-4425-a14e-864bd309dd69",
+    "year": "3rd Year",
+    "semester": "2nd Semester",
+    "subject": "Material Handling & Maintenance Management",
+    "topic": "1. Material Handling",
+    "teacher": "Irfan Sir",
+    "category": "Study Material",
+    "link": "https://docs.google.com/presentation/d/1WHkIftFO0BuHsJ7YnpDXOnRWc6X9hyGW/edit?usp=drive_link&ouid=102371481803203976363&rtpof=true&sd=true",
+    "isFile": false,
+    "createdAt": "2026-01-11T17:24:50.217Z",
+    "fileName": ""
   }
 ]
