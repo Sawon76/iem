@@ -830,18 +830,5 @@
     "isFile": false,
     "createdAt": "2026-01-11T18:41:12.660Z",
     "fileName": ""
-  },
-  {
-    "id": "89ba5eea-ebc5-4b6b-ae6f-3be6c531a4a3",
-    "year": "1st Year",
-    "semester": "1st Semester",
-    "subject": "gdsf",
-    "topic": "fgege",
-    "teacher": "wrgeg",
-    "category": "Study Material",
-    "link": "gfeerg",
-    "isFile": false,
-    "createdAt": "2026-01-12T16:10:36.349Z",
-    "fileName": ""
   }
 ]
