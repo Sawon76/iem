@@ -830,5 +830,18 @@
     "isFile": false,
     "createdAt": "2026-01-11T18:41:12.660Z",
     "fileName": ""
+  },
+  {
+    "id": "c09dbc52-59e1-4954-9999-374d12e1cc2f",
+    "year": "2nd Year",
+    "semester": "1st Semester",
+    "subject": "sfgsg",
+    "topic": "sfffsdf",
+    "teacher": "sfsgsg",
+    "category": "Study Material",
+    "link": "sgerdvsr",
+    "isFile": false,
+    "createdAt": "2026-01-12T12:47:29.143Z",
+    "fileName": ""
   }
 ]
