@@ -830,18 +830,5 @@
     "isFile": false,
     "createdAt": "2026-01-11T18:41:12.660Z",
     "fileName": ""
-  },
-  {
-    "id": "ad334174-3d82-4a22-acd9-6b1c792b31f2",
-    "year": "1st Year",
-    "semester": "1st Semester",
-    "subject": "sff",
-    "topic": "vfsdgs",
-    "teacher": "fsgs",
-    "category": "Study Material",
-    "link": "sffgsdg",
-    "isFile": false,
-    "createdAt": "2026-01-12T13:05:50.037Z",
-    "fileName": ""
   }
 ]
