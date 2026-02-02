@@ -830,18 +830,5 @@
     "isFile": false,
     "createdAt": "2026-01-11T18:41:12.660Z",
     "fileName": ""
-  },
-  {
-    "id": "00c35351-dc66-42d4-a7a4-196d872725b2",
-    "year": "1st Year",
-    "semester": "1st Semester",
-    "subject": "asa",
-    "topic": "dd",
-    "teacher": "dddd",
-    "category": "Study Material",
-    "link": "https://drive.google.com/uc?export=download&id=1KRw4tLR_d5tUFc9AWsG1dRKA4V773wsp",
-    "isFile": false,
-    "createdAt": "2026-02-02T17:11:34.962Z",
-    "fileName": ""
   }
 ]
