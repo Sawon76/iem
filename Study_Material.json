@@ -830,5 +830,18 @@
     "isFile": false,
     "createdAt": "2026-01-11T18:41:12.660Z",
     "fileName": ""
+  },
+  {
+    "id": "f998d7de-7c5e-4dc8-8c67-1f5fbca13231",
+    "year": "1st Year",
+    "semester": "1st Semester",
+    "subject": "dd",
+    "topic": "dad",
+    "teacher": "adada",
+    "category": "Study Material",
+    "link": "https://raw.githubusercontent.com/Sawon76/iem/main/uploads/1770051799201_Medical_Supply_Chain_Viability_During_Pandemics.pptx",
+    "isFile": true,
+    "createdAt": "2026-02-02T17:03:23.195Z",
+    "fileName": "Medical Supply Chain Viability During Pandemics.pptx"
   }
 ]
