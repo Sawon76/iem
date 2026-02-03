@@ -830,5 +830,18 @@
     "isFile": false,
     "createdAt": "2026-01-11T18:41:12.660Z",
     "fileName": ""
+  },
+  {
+    "id": "3bc6a86f-8f7d-4b57-a7a1-7e1d0cafb762",
+    "year": "3rd Year",
+    "semester": "2nd Semester",
+    "subject": "Product System Design",
+    "topic": "Work Study",
+    "teacher": "Golam Kibriya sir",
+    "category": "Study Material",
+    "link": "https://drive.google.com/uc?export=download&id=1k0pke0awtuwlw-UtQdF2a4Nxqyr_Em6-",
+    "isFile": false,
+    "createdAt": "2026-02-03T02:21:09.597Z",
+    "fileName": ""
   }
 ]
