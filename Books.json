@@ -206,5 +206,18 @@
     "isFile": false,
     "createdAt": "2026-02-03T04:38:02.999Z",
     "fileName": ""
+  },
+  {
+    "id": "cbba31cd-890c-4833-930a-57b5d8738787",
+    "year": "3rd Year",
+    "semester": "2nd Semester",
+    "subject": "Material Handling & Maintenance Management",
+    "topic": "Maintenance Management and Engineering by K pathak and R C Mishra",
+    "teacher": "Ashik Sir",
+    "category": "Books",
+    "link": "https://drive.google.com/uc?export=download&id=1CAWtDWYBC0E08-JGKP3at2vKiuH3f0y1",
+    "isFile": false,
+    "createdAt": "2026-02-03T12:31:19.773Z",
+    "fileName": ""
   }
 ]
