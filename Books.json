@@ -193,5 +193,18 @@
     "isFile": false,
     "createdAt": "2026-01-27T15:38:04.427Z",
     "fileName": ""
+  },
+  {
+    "id": "7f10543e-472e-4cc7-8544-ef7927b66f77",
+    "year": "3rd Year",
+    "semester": "2nd Semester",
+    "subject": "Product System Design",
+    "topic": "Industrial-engineering-and-production-management",
+    "teacher": "Both",
+    "category": "Books",
+    "link": "https://drive.google.com/uc?export=download&id=19hrZEGwzeZLK_TCmz_i9mB2netge022C",
+    "isFile": false,
+    "createdAt": "2026-02-03T04:38:02.999Z",
+    "fileName": ""
   }
 ]
