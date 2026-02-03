@@ -843,5 +843,18 @@
     "isFile": false,
     "createdAt": "2026-02-03T02:21:09.597Z",
     "fileName": ""
+  },
+  {
+    "id": "ee261c3d-de8d-4c1d-b290-cb5ed81675b3",
+    "year": "3rd Year",
+    "semester": "2nd Semester",
+    "subject": "Material Handling & Maintenance Management",
+    "topic": "2.Planned Preventive Maintenance",
+    "teacher": "Ashik sir",
+    "category": "Study Material",
+    "link": "https://drive.google.com/uc?export=download&id=1yH0KadmNq6HmUlDz83rYxdULsar5ypqR",
+    "isFile": false,
+    "createdAt": "2026-02-03T07:34:00.804Z",
+    "fileName": ""
   }
 ]
